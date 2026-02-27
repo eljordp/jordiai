@@ -788,8 +788,6 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     const raycaster = new THREE.Raycaster()
     const mouseVec = new THREE.Vector2()
 
-    let isHoveringMonitor = false
-
     const handleClick = (event: MouseEvent) => {
       mouseVec.x = (event.clientX / window.innerWidth) * 2 - 1
       mouseVec.y = -(event.clientY / window.innerHeight) * 2 + 1
@@ -813,24 +811,10 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     }
     renderer.domElement.addEventListener('click', handleClick)
 
-    // ── Mouse parallax + hover detection ──
+    // ── Mouse parallax ──
     const handleMouseMove = (e: MouseEvent) => {
       mousePos.current.x = (e.clientX / window.innerWidth - 0.5) * 2
       mousePos.current.y = (e.clientY / window.innerHeight - 0.5) * 2
-
-      // Hover detection on monitor — triggers zoom in
-      if (cameraModeRef.current !== 'monitor') {
-        mouseVec.x = (e.clientX / window.innerWidth) * 2 - 1
-        mouseVec.y = -(e.clientY / window.innerHeight) * 2 + 1
-        raycaster.setFromCamera(mouseVec, camera)
-        const hits = raycaster.intersectObject(screen)
-        if (hits.length > 0 && !isHoveringMonitor) {
-          isHoveringMonitor = true
-          onEnterMonitor()
-        } else if (hits.length === 0) {
-          isHoveringMonitor = false
-        }
-      }
     }
     window.addEventListener('mousemove', handleMouseMove)
 
