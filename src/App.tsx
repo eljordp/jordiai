@@ -11,9 +11,6 @@ export default function App() {
   const [osOpacity, setOsOpacity] = useState(0)
   const [cameraMode, setCameraMode] = useState<'idle' | 'desk' | 'monitor'>('idle')
   const cameraModeRef = useRef(cameraMode)
-  const osContainerRef = useRef<HTMLDivElement>(null)
-  const osContentRef = useRef<HTMLDivElement>(null)
-  const osScaleRef = useRef(1)
   cameraModeRef.current = cameraMode
 
   const handleResourcesLoaded = useCallback(() => {
@@ -44,7 +41,7 @@ export default function App() {
     }
   }, [exitMonitor])
 
-  const handleClickMonitor = useCallback(() => {
+  const handleEnterMonitor = useCallback(() => {
     if (cameraModeRef.current !== 'monitor') {
       setCameraMode('monitor')
       setShowOS(true)
@@ -53,22 +50,7 @@ export default function App() {
     }
   }, [])
 
-  const handleScreenBoundsUpdate = useCallback((bounds: { left: number; top: number; width: number; height: number }) => {
-    if (osContainerRef.current) {
-      const el = osContainerRef.current
-      el.style.left = `${bounds.left}px`
-      el.style.top = `${bounds.top}px`
-      el.style.width = `${bounds.width}px`
-      el.style.height = `${bounds.height}px`
-    }
-    if (osContentRef.current) {
-      const scale = Math.min(bounds.width / 1024, bounds.height / 640)
-      osScaleRef.current = scale
-      osContentRef.current.style.transform = `scale(${scale})`
-    }
-  }, [])
-
-  // ESC key — always works via ref, no stale closure
+  // ESC key
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -92,8 +74,7 @@ export default function App() {
         cameraMode={cameraMode}
         onResourcesLoaded={handleResourcesLoaded}
         onClickOutside={handleClickOutside}
-        onClickMonitor={handleClickMonitor}
-        onScreenBoundsUpdate={handleScreenBoundsUpdate}
+        onEnterMonitor={handleEnterMonitor}
       />
 
       {appState === 'loading' && (
@@ -113,22 +94,14 @@ export default function App() {
 
       {showOS && appState === 'running' && (
         <div
-          ref={osContainerRef}
           style={{
-            position: 'fixed',
-            zIndex: 5,
-            overflow: 'hidden',
+            ...styles.osContainer,
             opacity: osOpacity,
-            transition: 'opacity 0.4s ease',
-            pointerEvents: osOpacity > 0 ? 'auto' : 'none',
-            borderRadius: 2,
           }}
         >
-          {/* CRT overlay effects */}
           <div style={styles.crtOverlay} />
           <div style={styles.scanLines} />
 
-          {/* EXIT BUTTON */}
           <button
             style={styles.exitButton}
             onClick={exitMonitor}
@@ -145,24 +118,13 @@ export default function App() {
             <span style={styles.exitLabel}>Back</span>
           </button>
 
-          <div
-            ref={osContentRef}
-            style={{
-              width: 1024,
-              height: 640,
-              transformOrigin: 'top left',
-              position: 'relative',
-            }}
-          >
-            <OSWindow scaleRef={osScaleRef} />
-          </div>
+          <OSWindow />
         </div>
       )}
 
-      {/* Click hint when at desk view */}
       {appState === 'running' && cameraMode === 'desk' && !showOS && (
         <div style={styles.hint}>
-          <p style={styles.hintText}>Click the monitor to enter</p>
+          <p style={styles.hintText}>Hover over the monitor</p>
         </div>
       )}
     </>
@@ -206,6 +168,17 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#666',
     fontSize: 12,
     fontFamily: 'monospace',
+  },
+  osContainer: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    zIndex: 5,
+    pointerEvents: 'auto',
+    transition: 'opacity 0.4s ease',
+    overflow: 'hidden',
   },
   crtOverlay: {
     position: 'absolute',

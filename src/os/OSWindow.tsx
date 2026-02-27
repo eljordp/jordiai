@@ -21,7 +21,7 @@ export interface WindowState {
 
 export type AppKey = 'showcase' | 'about' | 'projects' | 'contact'
 
-export default function OSWindow({ scaleRef }: { scaleRef?: { current: number } }) {
+export default function OSWindow() {
   const [windows, setWindows] = useState<WindowState[]>([])
   const [nextZ, setNextZ] = useState(100)
   const [startMenuOpen, setStartMenuOpen] = useState(false)
@@ -123,7 +123,6 @@ export default function OSWindow({ scaleRef }: { scaleRef?: { current: number } 
         <Window
           key={w.id}
           windowState={w}
-          scaleRef={scaleRef}
           onClose={() => closeWindow(w.id)}
           onMinimize={() => minimizeWindow(w.id)}
           onFocus={() => focusWindow(w.id)}
