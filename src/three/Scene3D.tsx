@@ -257,14 +257,168 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     bezelR.position.set(141, 310, 12)
     monitorGroup.add(bezelR)
 
-    // Screen (glowing surface)
+    // Screen with OS preview texture
     const screenGeo = new THREE.PlaneGeometry(270, 164)
+
+    // Draw OS preview on a canvas
+    const previewCanvas = document.createElement('canvas')
+    previewCanvas.width = 1024
+    previewCanvas.height = 640
+    const ctx = previewCanvas.getContext('2d')!
+
+    // Desktop background
+    const bgGrad = ctx.createLinearGradient(0, 0, 1024, 640)
+    bgGrad.addColorStop(0, '#0d1b2a')
+    bgGrad.addColorStop(0.5, '#1b2838')
+    bgGrad.addColorStop(1, '#0d1b2a')
+    ctx.fillStyle = bgGrad
+    ctx.fillRect(0, 0, 1024, 640)
+
+    // Desktop icons
+    const iconData = [
+      { label: 'Showcase', y: 30 },
+      { label: 'About Me', y: 110 },
+      { label: 'Projects', y: 190 },
+      { label: 'Contact', y: 270 },
+    ]
+    iconData.forEach(({ label, y }) => {
+      ctx.fillStyle = 'rgba(200,200,200,0.15)'
+      ctx.fillRect(16, y, 56, 50)
+      ctx.strokeStyle = 'rgba(200,200,200,0.3)'
+      ctx.strokeRect(16, y, 56, 50)
+      ctx.fillStyle = '#fff'
+      ctx.font = '11px monospace'
+      ctx.textAlign = 'center'
+      ctx.fillText(label, 44, y + 68)
+    })
+
+    // Window
+    const wx = 100, wy = 16, ww = 680, wh = 540
+    // Window shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)'
+    ctx.fillRect(wx + 4, wy + 4, ww, wh)
+    // Window body
+    ctx.fillStyle = '#c0c0c0'
+    ctx.fillRect(wx, wy, ww, wh)
+    // Title bar
+    const titleGrad = ctx.createLinearGradient(wx, wy, wx + ww, wy)
+    titleGrad.addColorStop(0, '#000080')
+    titleGrad.addColorStop(1, '#1084d0')
+    ctx.fillStyle = titleGrad
+    ctx.fillRect(wx, wy, ww, 24)
+    ctx.fillStyle = '#fff'
+    ctx.font = 'bold 13px monospace'
+    ctx.textAlign = 'left'
+    ctx.fillText('Jordi - Showcase 2025', wx + 8, wy + 17)
+    // Title buttons
+    ctx.fillStyle = '#c0c0c0'
+    ;[ww - 20, ww - 40, ww - 60].forEach(bx => {
+      ctx.fillRect(wx + bx, wy + 4, 16, 16)
+      ctx.strokeStyle = '#808080'
+      ctx.strokeRect(wx + bx, wy + 4, 16, 16)
+    })
+    // Menu bar
+    ctx.fillStyle = '#c0c0c0'
+    ctx.fillRect(wx, wy + 24, ww, 20)
+    ctx.fillStyle = '#000'
+    ctx.font = '11px monospace'
+    ctx.fillText('File   Edit   View   Help', wx + 8, wy + 38)
+    // Content area
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(wx + 4, wy + 48, ww - 8, wh - 80)
+    // Content text
+    ctx.fillStyle = '#000'
+    ctx.font = 'bold 36px monospace'
+    ctx.fillText('Jordi', wx + 28, wy + 105)
+    ctx.font = '14px monospace'
+    ctx.fillStyle = '#444'
+    ctx.fillText('AI Engineer & Software Developer', wx + 28, wy + 130)
+    // Separator
+    ctx.fillStyle = '#000080'
+    ctx.fillRect(wx + 28, wy + 145, 200, 3)
+    // Bio text
+    ctx.fillStyle = '#333'
+    ctx.font = '12px monospace'
+    const bioLines = [
+      "I'm an AI Engineer passionate about building",
+      'innovative digital experiences. I specialize in',
+      'building websites, crafting software solutions,',
+      'and developing AI automations.',
+    ]
+    bioLines.forEach((line, i) => {
+      ctx.fillText(line, wx + 28, wy + 175 + i * 18)
+    })
+    // Section
+    ctx.fillStyle = '#000'
+    ctx.font = 'bold 16px monospace'
+    ctx.fillText('PROJECTS', wx + 28, wy + 270)
+    ctx.fillStyle = '#000080'
+    ctx.fillRect(wx + 28, wy + 278, 120, 2)
+    // Category cards
+    const cards = [
+      { title: 'Websites', desc: 'Web design & dev', x: wx + 28 },
+      { title: 'Software', desc: 'Custom apps & tools', x: wx + 250 },
+      { title: 'Contact', desc: 'Get in touch', x: wx + 472 },
+    ]
+    cards.forEach(({ title, desc, x }) => {
+      ctx.fillStyle = '#f0f0f0'
+      ctx.fillRect(x, wy + 295, 190, 70)
+      ctx.strokeStyle = '#d0d0d0'
+      ctx.strokeRect(x, wy + 295, 190, 70)
+      ctx.fillStyle = '#000080'
+      ctx.font = 'bold 13px monospace'
+      ctx.fillText(title, x + 12, wy + 320)
+      ctx.fillStyle = '#555'
+      ctx.font = '11px monospace'
+      ctx.fillText(desc, x + 12, wy + 340)
+    })
+    // Bottom links
+    ctx.fillStyle = '#000080'
+    ctx.font = '12px monospace'
+    ctx.textAlign = 'center'
+    ctx.fillText('About  |  Projects  |  Contact', wx + ww / 2, wy + wh - 60)
+    ctx.textAlign = 'left'
+
+    // Taskbar
+    ctx.fillStyle = '#c0c0c0'
+    ctx.fillRect(0, 608, 1024, 32)
+    ctx.strokeStyle = '#fff'
+    ctx.lineWidth = 1
+    ctx.strokeRect(0, 608, 1024, 1)
+    // Start button
+    ctx.fillStyle = '#c0c0c0'
+    ctx.fillRect(4, 612, 64, 24)
+    ctx.strokeStyle = '#dfdfdf'
+    ctx.strokeRect(4, 612, 64, 24)
+    ctx.fillStyle = '#000'
+    ctx.font = 'bold 12px monospace'
+    ctx.fillText('Start', 18, 628)
+    // Taskbar item
+    ctx.fillStyle = '#a0a0a0'
+    ctx.fillRect(76, 612, 140, 24)
+    ctx.fillStyle = '#000'
+    ctx.font = '11px monospace'
+    ctx.fillText('Showcase', 84, 628)
+    // Clock
+    ctx.fillStyle = '#c0c0c0'
+    ctx.fillRect(924, 612, 96, 24)
+    ctx.strokeStyle = '#808080'
+    ctx.strokeRect(924, 612, 96, 24)
+    ctx.fillStyle = '#000'
+    ctx.font = '12px monospace'
+    ctx.textAlign = 'right'
+    const now = new Date()
+    ctx.fillText(now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }), 1012, 628)
+    ctx.textAlign = 'left'
+
+    const previewTexture = new THREE.CanvasTexture(previewCanvas)
+
     const screenMat = new THREE.MeshStandardMaterial({
-      color: 0x1d2e2f,
-      emissive: 0x0a2828,
-      emissiveIntensity: 0.6,
+      map: previewTexture,
+      emissive: 0x444444,
+      emissiveIntensity: 0.8,
       roughness: 0.05,
-      metalness: 0.2,
+      metalness: 0.1,
     })
     const screen = new THREE.Mesh(screenGeo, screenMat)
     screen.position.set(0, 310, 12)

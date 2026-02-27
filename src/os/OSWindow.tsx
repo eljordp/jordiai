@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import Taskbar from './components/Taskbar'
 import Desktop from './components/Desktop'
 import Window from './components/Window'
@@ -82,6 +82,15 @@ export default function OSWindow() {
     setWindows(prev => [...prev, newWindow])
     setNextZ(z => z + 1)
   }, [windows, nextZ])
+
+  // Auto-open Showcase on first mount
+  const hasOpened = useRef(false)
+  useEffect(() => {
+    if (!hasOpened.current) {
+      hasOpened.current = true
+      openApp('showcase')
+    }
+  }, [openApp])
 
   const closeWindow = useCallback((id: string) => {
     setWindows(prev => prev.filter(w => w.id !== id))

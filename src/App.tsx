@@ -20,13 +20,6 @@ export default function App() {
   const handleStart = useCallback(() => {
     setAppState('running')
     setCameraMode('desk')
-    setTimeout(() => {
-      setCameraMode('monitor')
-      setTimeout(() => {
-        setShowOS(true)
-        requestAnimationFrame(() => setOsOpacity(1))
-      }, 1200)
-    }, 1500)
   }, [])
 
   const exitMonitor = useCallback(() => {
