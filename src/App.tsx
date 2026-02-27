@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import BiosScreen from './components/BiosScreen'
 import Scene3D from './three/Scene3D'
 import OSWindow from './os/OSWindow'
@@ -10,6 +10,8 @@ export default function App() {
   const [showOS, setShowOS] = useState(false)
   const [osOpacity, setOsOpacity] = useState(0)
   const [cameraMode, setCameraMode] = useState<'idle' | 'desk' | 'monitor'>('idle')
+  const cameraModeRef = useRef(cameraMode)
+  cameraModeRef.current = cameraMode
 
   const handleResourcesLoaded = useCallback(() => {
     setAppState('bios')
@@ -22,46 +24,57 @@ export default function App() {
       setCameraMode('monitor')
       setTimeout(() => {
         setShowOS(true)
-        // Fade in OS
         requestAnimationFrame(() => setOsOpacity(1))
       }, 1200)
     }, 1500)
   }, [])
 
+  const exitMonitor = useCallback(() => {
+    setOsOpacity(0)
+    setTimeout(() => {
+      setShowOS(false)
+      setCameraMode('desk')
+    }, 400)
+  }, [])
+
   const handleClickOutside = useCallback(() => {
-    if (cameraMode === 'monitor') {
-      setOsOpacity(0)
-      setTimeout(() => {
-        setShowOS(false)
-        setCameraMode('desk')
-      }, 400)
-    } else if (cameraMode === 'desk') {
+    const mode = cameraModeRef.current
+    if (mode === 'monitor') {
+      exitMonitor()
+    } else if (mode === 'desk') {
       setCameraMode('idle')
     } else {
       setCameraMode('desk')
     }
-  }, [cameraMode])
+  }, [exitMonitor])
 
   const handleClickMonitor = useCallback(() => {
-    if (cameraMode !== 'monitor') {
+    if (cameraModeRef.current !== 'monitor') {
       setCameraMode('monitor')
       setTimeout(() => {
         setShowOS(true)
         requestAnimationFrame(() => setOsOpacity(1))
       }, 1200)
     }
-  }, [cameraMode])
+  }, [])
 
-  // Keyboard shortcut: Escape to zoom out
+  // ESC key — always works via ref, no stale closure
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        handleClickOutside()
+        e.preventDefault()
+        e.stopPropagation()
+        const mode = cameraModeRef.current
+        if (mode === 'monitor') {
+          exitMonitor()
+        } else if (mode === 'desk') {
+          setCameraMode('idle')
+        }
       }
     }
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
-  }, [handleClickOutside])
+    window.addEventListener('keydown', handleKey, true)
+    return () => window.removeEventListener('keydown', handleKey, true)
+  }, [exitMonitor])
 
   return (
     <>
@@ -98,6 +111,24 @@ export default function App() {
           {/* CRT overlay effects */}
           <div style={styles.crtOverlay} />
           <div style={styles.scanLines} />
+
+          {/* EXIT BUTTON — always visible */}
+          <button
+            style={styles.exitButton}
+            onClick={exitMonitor}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.6)'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
+            }}
+          >
+            <span style={styles.exitArrow}>&#8592;</span>
+            <span style={styles.exitLabel}>Back</span>
+          </button>
+
           <OSWindow />
         </div>
       )}
@@ -106,13 +137,6 @@ export default function App() {
       {appState === 'running' && cameraMode === 'desk' && !showOS && (
         <div style={styles.hint}>
           <p style={styles.hintText}>Click the monitor to enter</p>
-        </div>
-      )}
-
-      {/* Back hint when in monitor */}
-      {appState === 'running' && cameraMode === 'monitor' && showOS && (
-        <div style={styles.escHint}>
-          <p style={styles.escText}>ESC to zoom out</p>
         </div>
       )}
     </>
@@ -165,7 +189,6 @@ const styles: Record<string, React.CSSProperties> = {
     height: '100%',
     zIndex: 5,
     pointerEvents: 'auto',
-    borderRadius: 0,
   },
   crtOverlay: {
     position: 'absolute',
@@ -188,6 +211,33 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)',
     opacity: 0.5,
   },
+  exitButton: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    zIndex: 10001,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '6px 14px',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    border: '1px solid rgba(255,255,255,0.2)',
+    borderRadius: 6,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    backdropFilter: 'blur(4px)',
+  },
+  exitArrow: {
+    color: '#fff',
+    fontSize: 16,
+    lineHeight: 1,
+  },
+  exitLabel: {
+    color: '#fff',
+    fontSize: 11,
+    fontFamily: 'monospace',
+    letterSpacing: 1,
+  },
   hint: {
     position: 'fixed',
     bottom: 60,
@@ -202,20 +252,5 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'monospace',
     textShadow: '0 0 10px rgba(68,136,255,0.3)',
     letterSpacing: 2,
-  },
-  escHint: {
-    position: 'fixed',
-    top: 12,
-    right: 16,
-    zIndex: 10000,
-    opacity: 0.4,
-  },
-  escText: {
-    color: '#fff',
-    fontSize: 10,
-    fontFamily: 'monospace',
-    padding: '4px 8px',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 3,
   },
 }
