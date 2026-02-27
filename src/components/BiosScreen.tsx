@@ -1,96 +1,117 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface Props {
   onStart: () => void
 }
 
 export default function BiosScreen({ onStart }: Props) {
-  const [loadingLines, setLoadingLines] = useState<string[]>([])
+  const [progress, setProgress] = useState(0)
+  const [statusText, setStatusText] = useState('')
   const [showStart, setShowStart] = useState(false)
   const [hoverStart, setHoverStart] = useState(false)
+  const animRef = useRef<number>(0)
 
-  const biosLines = [
-    'JDBIOS (C)2025 Jordi Studios, Inc.',
-    '',
-    'CPU: Neural Processing Unit @ 4.2 GHz',
-    'Memory: 128GB DDR5 @ 6400MHz............OK',
-    'GPU: RTX 5090 Ti 48GB VRAM..............OK',
-    'Storage: 8TB NVMe SSD Array..............OK',
-    '',
-    'Initializing AI subsystems...............',
-    'Loading neural network weights...........',
-    'Calibrating transformer attention heads..',
-    'Establishing API connections..............',
-    'Mounting virtual workspaces..............',
-    '',
-    'All systems operational.',
-    '',
-    'FINISHED LOADING RESOURCES',
+  const statuses = [
+    { at: 0, text: 'Initializing environment...' },
+    { at: 15, text: 'Loading assets...' },
+    { at: 35, text: 'Building workspace...' },
+    { at: 55, text: 'Preparing portfolio...' },
+    { at: 75, text: 'Almost ready...' },
+    { at: 95, text: 'Finalizing...' },
   ]
 
   useEffect(() => {
-    let i = 0
-    const interval = setInterval(() => {
-      if (i < biosLines.length) {
-        setLoadingLines(prev => [...prev, biosLines[i]])
-        i++
-      } else {
-        clearInterval(interval)
-        setTimeout(() => setShowStart(true), 600)
+    let current = 0
+    const target = 100
+    const startTime = performance.now()
+    const duration = 3000 // 3 seconds total
+
+    const tick = (now: number) => {
+      const elapsed = now - startTime
+      const t = Math.min(elapsed / duration, 1)
+      // Ease out curve — fast start, slow finish
+      current = Math.round(target * (1 - Math.pow(1 - t, 3)))
+
+      setProgress(current)
+
+      // Update status text
+      for (let i = statuses.length - 1; i >= 0; i--) {
+        if (current >= statuses[i].at) {
+          setStatusText(statuses[i].text)
+          break
+        }
       }
-    }, 200)
-    return () => clearInterval(interval)
+
+      if (current < target) {
+        animRef.current = requestAnimationFrame(tick)
+      } else {
+        setStatusText('Ready')
+        setTimeout(() => setShowStart(true), 400)
+      }
+    }
+
+    animRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(animRef.current)
   }, [])
 
   return (
     <div style={styles.container}>
-      {/* CRT scan line effect */}
       <div style={styles.scanOverlay} />
       <div style={styles.vignetteOverlay} />
 
-      <div style={styles.header}>
-        <p style={styles.biosTitle}>JDBIOS (C)2025 Jordi Studios</p>
-        <p style={styles.biosVersion}>v2.5.0 | Build 20250226</p>
-      </div>
+      <div style={styles.content}>
+        {/* Logo / Name */}
+        <div style={styles.logoSection}>
+          <h1 style={styles.name}>JORDI</h1>
+          <div style={styles.divider} />
+          <p style={styles.tagline}>AI Engineer & Software Developer</p>
+        </div>
 
-      <div style={styles.body}>
-        {loadingLines.map((line, i) => (
-          <p key={i} style={line === '' ? styles.spacer : styles.line}>
-            {line}
-          </p>
-        ))}
-        {!showStart && loadingLines.length < biosLines.length && (
-          <div style={styles.cursorLine}>
-            <span style={styles.line}>{'>'} </span>
-            <div className="blinking-cursor" />
+        {/* Progress */}
+        <div style={styles.progressSection}>
+          <div style={styles.progressBar}>
+            <div
+              style={{
+                ...styles.progressFill,
+                width: `${progress}%`,
+              }}
+            />
           </div>
-        )}
-      </div>
-
-      {showStart && (
-        <div style={styles.footer}>
-          <div style={styles.startPopup}>
-            <div style={styles.popupBorder}>
-              <p style={styles.showcaseTitle}>Jordi Portfolio Showcase 2025</p>
-              <p style={styles.showcaseSubtitle}>&laquo; AI Engineer &middot; Software Developer &raquo;</p>
-              <button
-                style={{
-                  ...styles.startButton,
-                  ...(hoverStart ? styles.startButtonHover : {}),
-                }}
-                onClick={onStart}
-                onMouseEnter={() => setHoverStart(true)}
-                onMouseLeave={() => setHoverStart(false)}
-              >
-                <span style={{
-                  ...styles.startText,
-                  ...(hoverStart ? { color: '#000' } : {}),
-                }}>Click start to begin</span>
-              </button>
-            </div>
+          <div style={styles.progressInfo}>
+            <span style={styles.statusText}>{statusText}</span>
+            <span style={styles.percentText}>{progress}%</span>
           </div>
         </div>
-      )}
+
+        {/* Start button */}
+        <div style={{
+          ...styles.startSection,
+          opacity: showStart ? 1 : 0,
+          transform: showStart ? 'translateY(0)' : 'translateY(10px)',
+          transition: 'all 0.5s ease',
+          pointerEvents: showStart ? 'auto' : 'none',
+        }}>
+          <button
+            style={{
+              ...styles.startButton,
+              ...(hoverStart ? styles.startButtonHover : {}),
+            }}
+            onClick={onStart}
+            onMouseEnter={() => setHoverStart(true)}
+            onMouseLeave={() => setHoverStart(false)}
+          >
+            <span style={{
+              ...styles.startText,
+              ...(hoverStart ? { color: '#000' } : {}),
+            }}>Enter</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Bottom branding */}
+      <div style={styles.footer}>
+        <span style={styles.footerText}>Jordi Studios &copy; 2025</span>
+      </div>
     </div>
   )
 }
@@ -105,7 +126,8 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: '#000',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    justifyContent: 'center',
     zIndex: 10,
     fontFamily: 'monospace',
     overflow: 'hidden',
@@ -126,88 +148,108 @@ const styles: Record<string, React.CSSProperties> = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)',
+    background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%)',
     pointerEvents: 'none',
     zIndex: 2,
   },
-  header: {
-    padding: '48px 48px 0',
-    zIndex: 3,
-  },
-  biosTitle: {
-    color: '#aaa',
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  biosVersion: {
-    color: '#555',
-    fontSize: 11,
-  },
-  body: {
-    paddingLeft: 48,
-    paddingRight: 48,
-    flex: 1,
-    paddingTop: 24,
-    zIndex: 3,
-  },
-  line: {
-    color: '#ccc',
-    fontSize: 13,
-    marginBottom: 2,
-    fontFamily: 'monospace',
-    lineHeight: 1.6,
-  },
-  spacer: {
-    height: 12,
-  },
-  cursorLine: {
+  content: {
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
-    gap: 2,
-  },
-  footer: {
-    padding: '0 48px 64px',
-    display: 'flex',
-    justifyContent: 'center',
+    gap: 48,
     zIndex: 3,
+    width: '100%',
+    maxWidth: 420,
+    padding: '0 24px',
   },
-  startPopup: {
+  logoSection: {
     textAlign: 'center',
   },
-  popupBorder: {
-    border: '1px solid #333',
-    padding: '32px 48px',
-    backgroundColor: 'rgba(10,10,15,0.8)',
-  },
-  showcaseTitle: {
+  name: {
     color: '#fff',
-    fontSize: 20,
-    marginBottom: 8,
+    fontSize: 48,
+    fontWeight: 'bold',
+    letterSpacing: 16,
+    marginBottom: 16,
     fontFamily: 'monospace',
+  },
+  divider: {
+    width: 60,
+    height: 2,
+    backgroundColor: '#fff',
+    margin: '0 auto 16px',
+    opacity: 0.3,
+  },
+  tagline: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 12,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+  },
+  progressSection: {
+    width: '100%',
+  },
+  progressBar: {
+    width: '100%',
+    height: 3,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 2,
+    transition: 'width 0.1s linear',
+  },
+  progressInfo: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  statusText: {
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 11,
     letterSpacing: 1,
   },
-  showcaseSubtitle: {
-    color: '#666',
-    fontSize: 12,
-    marginBottom: 28,
-    fontFamily: 'monospace',
+  percentText: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 11,
+    fontVariantNumeric: 'tabular-nums',
+    letterSpacing: 1,
+  },
+  startSection: {
+    marginTop: 8,
   },
   startButton: {
-    backgroundColor: '#000',
-    border: '2px solid #fff',
+    backgroundColor: 'transparent',
+    border: '1px solid rgba(255,255,255,0.3)',
     cursor: 'pointer',
-    padding: '12px 32px',
-    transition: 'all 0.2s ease',
+    padding: '14px 56px',
+    transition: 'all 0.3s ease',
+    borderRadius: 0,
   },
   startButtonHover: {
     backgroundColor: '#fff',
+    borderColor: '#fff',
   },
   startText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: 'monospace',
-    letterSpacing: 1,
-    transition: 'color 0.2s ease',
+    letterSpacing: 4,
+    textTransform: 'uppercase',
+    transition: 'color 0.3s ease',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 24,
+    zIndex: 3,
+  },
+  footerText: {
+    color: 'rgba(255,255,255,0.15)',
+    fontSize: 10,
+    letterSpacing: 2,
+    fontFamily: 'monospace',
   },
 }
-
