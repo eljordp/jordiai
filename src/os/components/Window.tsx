@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react'
 import { type WindowState } from '../OSWindow'
 
+const isMobile = window.innerWidth < 768
+
 interface Props {
   windowState: WindowState
   onClose: () => void
@@ -11,7 +13,7 @@ interface Props {
 }
 
 export default function Window({ windowState, onClose, onMinimize, onFocus, onMove, children }: Props) {
-  const [maximized, setMaximized] = useState(false)
+  const [maximized, setMaximized] = useState(isMobile)
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (maximized) return
@@ -37,42 +39,71 @@ export default function Window({ windowState, onClose, onMinimize, onFocus, onMo
     window.addEventListener('mouseup', handleUp)
   }, [windowState.x, windowState.y, onFocus, onMove, maximized])
 
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (maximized) return
+    onFocus()
+    const touch = e.touches[0]
+    const startX = touch.clientX
+    const startY = touch.clientY
+    const origX = windowState.x
+    const origY = windowState.y
+
+    const handleMove = (ev: TouchEvent) => {
+      const t = ev.touches[0]
+      const dx = t.clientX - startX
+      const dy = t.clientY - startY
+      onMove(origX + dx, origY + dy)
+    }
+
+    const handleUp = () => {
+      window.removeEventListener('touchmove', handleMove)
+      window.removeEventListener('touchend', handleUp)
+    }
+
+    window.addEventListener('touchmove', handleMove, { passive: true })
+    window.addEventListener('touchend', handleUp)
+  }, [windowState.x, windowState.y, onFocus, onMove, maximized])
+
+  const taskbarH = isMobile ? 44 : 32
+
   const style: React.CSSProperties = maximized
-    ? { ...styles.window, top: 0, left: 0, width: '100%', height: 'calc(100% - 32px)', zIndex: windowState.zIndex }
-    : { ...styles.window, top: windowState.y, left: windowState.x, width: windowState.width, height: windowState.height, zIndex: windowState.zIndex }
+    ? { ...s.window, top: 0, left: 0, width: '100%', height: `calc(100% - ${taskbarH}px)`, zIndex: windowState.zIndex }
+    : { ...s.window, top: windowState.y, left: windowState.x, width: windowState.width, height: windowState.height, zIndex: windowState.zIndex }
 
   return (
     <div style={style} onMouseDown={onFocus}>
-      <div style={styles.titleBar} onMouseDown={handleMouseDown}>
-        <div style={styles.titleLeft}>
-          <span style={styles.titleText}>{windowState.title}</span>
+      <div style={s.titleBar} onMouseDown={handleMouseDown} onTouchStart={handleTouchStart}>
+        <div style={s.titleLeft}>
+          <span style={s.titleText}>{windowState.title}</span>
         </div>
-        <div style={styles.titleButtons} onMouseDown={e => e.stopPropagation()}>
-          <button style={styles.winBtn} onClick={onMinimize}>
-            <span style={styles.btnIcon}>_</span>
+        <div style={s.titleButtons} onMouseDown={e => e.stopPropagation()}>
+          <button style={s.winBtn} onClick={onMinimize}>
+            <span style={s.btnIcon}>_</span>
           </button>
-          <button style={styles.winBtn} onClick={() => setMaximized(!maximized)}>
-            <span style={styles.btnIcon}>□</span>
-          </button>
-          <button style={{ ...styles.winBtn, ...styles.closeBtn }} onClick={onClose}>
-            <span style={styles.btnIcon}>✕</span>
+          {!isMobile && (
+            <button style={s.winBtn} onClick={() => setMaximized(!maximized)}>
+              <span style={s.btnIcon}>□</span>
+            </button>
+          )}
+          <button style={{ ...s.winBtn, ...s.closeBtn }} onClick={onClose}>
+            <span style={s.btnIcon}>✕</span>
           </button>
         </div>
       </div>
-      <div style={styles.menuBar}>
-        <span style={styles.menuItem}>File</span>
-        <span style={styles.menuItem}>Edit</span>
-        <span style={styles.menuItem}>View</span>
-        <span style={styles.menuItem}>Help</span>
+      <div style={s.menuBar}>
+        <span style={s.menuItem}>File</span>
+        <span style={s.menuItem}>Edit</span>
+        <span style={s.menuItem}>View</span>
+        <span style={s.menuItem}>Help</span>
       </div>
-      <div style={styles.content}>
+      <div style={s.content}>
         {children}
       </div>
     </div>
   )
 }
 
-const styles: Record<string, React.CSSProperties> = {
+const s: Record<string, React.CSSProperties> = {
   window: {
     position: 'absolute',
     backgroundColor: '#c0c0c0',
@@ -82,12 +113,12 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: '4px 4px 10px rgba(0,0,0,0.4)',
   },
   titleBar: {
-    height: 22,
+    height: isMobile ? 36 : 22,
     background: 'linear-gradient(90deg, #000080 0%, #1084d0 100%)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0 3px',
+    padding: isMobile ? '0 6px' : '0 3px',
     cursor: 'move',
     userSelect: 'none',
   },
@@ -99,7 +130,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   titleText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: isMobile ? 14 : 12,
     fontFamily: 'monospace',
     fontWeight: 'bold',
     whiteSpace: 'nowrap',
@@ -108,11 +139,11 @@ const styles: Record<string, React.CSSProperties> = {
   },
   titleButtons: {
     display: 'flex',
-    gap: 2,
+    gap: isMobile ? 4 : 2,
   },
   winBtn: {
-    width: 18,
-    height: 16,
+    width: isMobile ? 32 : 18,
+    height: isMobile ? 28 : 16,
     border: '2px outset #dfdfdf',
     backgroundColor: '#c0c0c0',
     cursor: 'pointer',
@@ -123,12 +154,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
   closeBtn: {},
   btnIcon: {
-    fontSize: 10,
+    fontSize: isMobile ? 14 : 10,
     lineHeight: 1,
     fontWeight: 'bold',
   },
   menuBar: {
-    height: 20,
+    height: isMobile ? 28 : 20,
     borderBottom: '1px solid #808080',
     display: 'flex',
     alignItems: 'center',
@@ -136,9 +167,9 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0 4px',
   },
   menuItem: {
-    fontSize: 11,
+    fontSize: isMobile ? 13 : 11,
     fontFamily: 'monospace',
-    padding: '2px 8px',
+    padding: isMobile ? '4px 10px' : '2px 8px',
     cursor: 'pointer',
     color: '#000',
   },

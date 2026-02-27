@@ -1,5 +1,7 @@
 import { type AppKey } from '../OSWindow'
 
+const isMobile = window.innerWidth < 768
+
 interface Props {
   onOpenApp: (key: AppKey) => void
 }
@@ -18,7 +20,7 @@ export default function Desktop({ onOpenApp }: Props) {
         <div
           key={app.key}
           style={styles.shortcut}
-          onDoubleClick={() => onOpenApp(app.key)}
+          onClick={() => onOpenApp(app.key)}
         >
           <div style={styles.icon}>{app.icon}</div>
           <span style={styles.label}>{app.label}</span>
@@ -31,31 +33,32 @@ export default function Desktop({ onOpenApp }: Props) {
 const styles: Record<string, React.CSSProperties> = {
   desktop: {
     position: 'absolute',
-    top: 16,
-    left: 16,
+    top: isMobile ? 10 : 16,
+    left: isMobile ? 10 : 16,
     display: 'flex',
-    flexDirection: 'column',
-    gap: 8,
+    flexDirection: isMobile ? 'row' : 'column',
+    flexWrap: isMobile ? 'wrap' : undefined,
+    gap: isMobile ? 4 : 8,
     zIndex: 1,
   },
   shortcut: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    width: 72,
-    padding: 8,
+    width: isMobile ? 64 : 72,
+    padding: isMobile ? 6 : 8,
     cursor: 'pointer',
     borderRadius: 4,
     userSelect: 'none',
   },
   icon: {
-    fontSize: 32,
+    fontSize: isMobile ? 28 : 32,
     marginBottom: 4,
     filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.5))',
   },
   label: {
     color: '#fff',
-    fontSize: 11,
+    fontSize: isMobile ? 10 : 11,
     textAlign: 'center',
     fontFamily: 'monospace',
     textShadow: '1px 1px 2px rgba(0,0,0,0.8)',

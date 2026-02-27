@@ -54,14 +54,16 @@ export default function ProjectsPage() {
   )
 }
 
+const isMobile = window.innerWidth < 768
+
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    padding: 24,
+    padding: isMobile ? 16 : 24,
     fontFamily: 'monospace',
     color: '#000',
   },
   title: {
-    fontSize: 22,
+    fontSize: isMobile ? 20 : 22,
     fontWeight: 'bold',
     color: '#000080',
     marginBottom: 12,
@@ -69,35 +71,35 @@ const styles: Record<string, React.CSSProperties> = {
     paddingBottom: 8,
   },
   intro: {
-    fontSize: 12,
+    fontSize: 13,
     lineHeight: 1.6,
     color: '#333',
     marginBottom: 20,
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
     gap: 12,
   },
   card: {
-    padding: 14,
+    padding: isMobile ? 12 : 14,
     backgroundColor: '#f0f0f0',
     border: '2px outset #dfdfdf',
   },
   projectTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#000080',
     marginBottom: 6,
   },
   tech: {
-    fontSize: 10,
+    fontSize: 11,
     color: '#888',
     marginBottom: 8,
     fontStyle: 'italic',
   },
   desc: {
-    fontSize: 11,
+    fontSize: 12,
     lineHeight: 1.5,
     color: '#333',
   },

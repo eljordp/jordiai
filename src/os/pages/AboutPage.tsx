@@ -80,7 +80,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 8,
   },
   text: {
-    fontSize: 12,
+    fontSize: 13,
     lineHeight: 1.6,
     color: '#333',
   },
@@ -90,8 +90,8 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 6,
   },
   skillTag: {
-    fontSize: 11,
-    padding: '3px 8px',
+    fontSize: 12,
+    padding: '4px 10px',
     backgroundColor: '#000080',
     color: '#fff',
     fontFamily: 'monospace',

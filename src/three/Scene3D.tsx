@@ -804,9 +804,10 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
         return
       }
 
-      // Click outside monitor
       const intersects = raycaster.intersectObject(screen)
-      if (intersects.length === 0) {
+      if (intersects.length > 0) {
+        onEnterMonitor()
+      } else {
         onClickOutside()
       }
     }

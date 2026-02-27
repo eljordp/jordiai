@@ -120,7 +120,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 6,
   },
   categoryDesc: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#555',
   },
   links: {

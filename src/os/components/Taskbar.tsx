@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { type WindowState, type AppKey } from '../OSWindow'
 
+const isMobile = window.innerWidth < 768
+
 interface Props {
   windows: WindowState[]
   startMenuOpen: boolean
@@ -32,125 +34,119 @@ export default function Taskbar({ windows, startMenuOpen, onToggleStart, onOpenA
   return (
     <>
       {startMenuOpen && (
-        <div style={styles.startMenu}>
-          <div style={styles.startMenuSidebar}>
-            <span style={styles.sidebarText}>JordiOS</span>
+        <div style={s.startMenu}>
+          <div style={s.startMenuSidebar}>
+            <span style={s.sidebarText}>JordiOS</span>
           </div>
-          <div style={styles.startMenuContent}>
+          <div style={s.startMenuContent}>
             {startMenuItems.map(item => (
               <div
                 key={item.key}
-                style={styles.startMenuItem}
+                style={s.startMenuItem}
                 onClick={() => onOpenApp(item.key)}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#000080')}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
-                <span style={styles.menuIcon}>{item.icon}</span>
-                <span style={styles.menuLabel}>{item.label}</span>
+                <span style={s.menuIcon}>{item.icon}</span>
+                <span style={s.menuLabel}>{item.label}</span>
               </div>
             ))}
-            <div style={styles.menuDivider} />
-            <div
-              style={styles.startMenuItem}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#000080')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              <span style={styles.menuIcon}>🔌</span>
-              <span style={styles.menuLabel}>Shut Down...</span>
+            <div style={s.menuDivider} />
+            <div style={s.startMenuItem}>
+              <span style={s.menuIcon}>🔌</span>
+              <span style={s.menuLabel}>Shut Down...</span>
             </div>
           </div>
         </div>
       )}
 
-      <div style={styles.taskbar}>
+      <div style={s.taskbar}>
         <button
           style={{
-            ...styles.startButton,
-            ...(startMenuOpen ? styles.startButtonActive : {}),
+            ...s.startButton,
+            ...(startMenuOpen ? s.startButtonActive : {}),
           }}
           onClick={onToggleStart}
         >
-          <span style={styles.startIcon}>⊞</span>
-          <span style={styles.startLabel}>Start</span>
+          <span style={s.startIcon}>⊞</span>
+          <span style={s.startLabel}>Start</span>
         </button>
 
-        <div style={styles.taskButtons}>
+        <div style={s.taskButtons}>
           {windows.map(w => (
             <button
               key={w.id}
               style={{
-                ...styles.taskButton,
-                ...(w.minimized ? {} : styles.taskButtonActive),
+                ...s.taskButton,
+                ...(w.minimized ? {} : s.taskButtonActive),
               }}
               onClick={() => onRestoreWindow(w.id)}
             >
-              {w.title.length > 20 ? w.title.slice(0, 20) + '...' : w.title}
+              {w.title.length > (isMobile ? 12 : 20) ? w.title.slice(0, isMobile ? 12 : 20) + '...' : w.title}
             </button>
           ))}
         </div>
 
-        <div style={styles.tray}>
-          <span style={styles.trayIcon}>🔊</span>
-          <span style={styles.clock}>{time}</span>
+        <div style={s.tray}>
+          <span style={s.trayIcon}>🔊</span>
+          <span style={s.clock}>{time}</span>
         </div>
       </div>
     </>
   )
 }
 
-const styles: Record<string, React.CSSProperties> = {
+const s: Record<string, React.CSSProperties> = {
   taskbar: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: 32,
+    height: isMobile ? 44 : 32,
     backgroundColor: '#c0c0c0',
     borderTop: '2px solid #fff',
     display: 'flex',
     alignItems: 'center',
-    padding: '0 2px',
+    padding: isMobile ? '0 4px' : '0 2px',
     zIndex: 9999,
-    gap: 2,
+    gap: isMobile ? 4 : 2,
   },
   startButton: {
-    height: 26,
+    height: isMobile ? 36 : 26,
     display: 'flex',
     alignItems: 'center',
     gap: 4,
-    padding: '0 6px',
+    padding: isMobile ? '0 10px' : '0 6px',
     backgroundColor: '#c0c0c0',
     border: '2px outset #fff',
     cursor: 'pointer',
     fontFamily: 'monospace',
     fontWeight: 'bold',
-    fontSize: 12,
+    fontSize: isMobile ? 14 : 12,
   },
   startButtonActive: {
     border: '2px inset #808080',
   },
   startIcon: {
-    fontSize: 14,
+    fontSize: isMobile ? 18 : 14,
   },
   startLabel: {
-    fontSize: 12,
+    fontSize: isMobile ? 14 : 12,
     fontWeight: 'bold',
   },
   taskButtons: {
     flex: 1,
     display: 'flex',
-    gap: 2,
+    gap: isMobile ? 4 : 2,
     overflow: 'hidden',
   },
   taskButton: {
-    height: 24,
-    maxWidth: 160,
-    padding: '0 8px',
+    height: isMobile ? 34 : 24,
+    maxWidth: isMobile ? 120 : 160,
+    padding: isMobile ? '0 10px' : '0 8px',
     backgroundColor: '#c0c0c0',
     border: '2px outset #fff',
     cursor: 'pointer',
     fontFamily: 'monospace',
-    fontSize: 11,
+    fontSize: isMobile ? 12 : 11,
     textAlign: 'left',
     overflow: 'hidden',
     whiteSpace: 'nowrap',
@@ -164,24 +160,24 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-    padding: '0 8px',
-    height: 26,
+    padding: isMobile ? '0 10px' : '0 8px',
+    height: isMobile ? 34 : 26,
     border: '2px inset #808080',
     backgroundColor: '#c0c0c0',
   },
   trayIcon: {
-    fontSize: 12,
+    fontSize: isMobile ? 14 : 12,
   },
   clock: {
     fontFamily: 'monospace',
-    fontSize: 11,
+    fontSize: isMobile ? 12 : 11,
     color: '#000',
   },
   startMenu: {
     position: 'absolute',
-    bottom: 32,
+    bottom: isMobile ? 44 : 32,
     left: 0,
-    width: 200,
+    width: isMobile ? 220 : 200,
     backgroundColor: '#c0c0c0',
     border: '2px outset #fff',
     zIndex: 10000,
@@ -212,17 +208,17 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: 8,
-    padding: '6px 12px',
+    padding: isMobile ? '10px 12px' : '6px 12px',
     cursor: 'pointer',
     color: '#000',
     fontFamily: 'monospace',
-    fontSize: 12,
+    fontSize: isMobile ? 14 : 12,
   },
   menuIcon: {
-    fontSize: 16,
+    fontSize: isMobile ? 20 : 16,
   },
   menuLabel: {
-    fontSize: 12,
+    fontSize: isMobile ? 14 : 12,
   },
   menuDivider: {
     height: 1,

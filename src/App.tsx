@@ -124,7 +124,7 @@ export default function App() {
 
       {appState === 'running' && cameraMode === 'desk' && !showOS && (
         <div style={styles.hint}>
-          <p style={styles.hintText}>Hover over the monitor</p>
+          <p style={styles.hintText}>Click the monitor to enter</p>
         </div>
       )}
     </>
