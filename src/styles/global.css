@@ -84,3 +84,19 @@ h1, h2, h3, h4, h5, p {
   75% { content: '...'; }
   100% { content: '   '; }
 }
+
+@keyframes loading-pulse {
+  0% { transform: scaleX(0); opacity: 0.5; }
+  50% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(0); opacity: 0.5; }
+}
+
+@keyframes fade-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* BIOS hover button text fix */
+.bios-start-button:hover span {
+  color: #000;
+}

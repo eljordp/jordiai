@@ -7,16 +7,24 @@ interface Props {
 export default function BiosScreen({ onStart }: Props) {
   const [loadingLines, setLoadingLines] = useState<string[]>([])
   const [showStart, setShowStart] = useState(false)
+  const [hoverStart, setHoverStart] = useState(false)
 
   const biosLines = [
     'JDBIOS (C)2025 Jordi Studios, Inc.',
+    '',
     'CPU: Neural Processing Unit @ 4.2 GHz',
-    'Memory: 128GB DDR5 @ 6400MHz...OK',
-    'GPU: RTX 5090 Ti 48GB VRAM...OK',
-    'Initializing AI subsystems...',
-    'Loading neural networks...',
-    'Calibrating transformer models...',
-    'Establishing API connections...',
+    'Memory: 128GB DDR5 @ 6400MHz............OK',
+    'GPU: RTX 5090 Ti 48GB VRAM..............OK',
+    'Storage: 8TB NVMe SSD Array..............OK',
+    '',
+    'Initializing AI subsystems...............',
+    'Loading neural network weights...........',
+    'Calibrating transformer attention heads..',
+    'Establishing API connections..............',
+    'Mounting virtual workspaces..............',
+    '',
+    'All systems operational.',
+    '',
     'FINISHED LOADING RESOURCES',
   ]
 
@@ -28,35 +36,58 @@ export default function BiosScreen({ onStart }: Props) {
         i++
       } else {
         clearInterval(interval)
-        setTimeout(() => setShowStart(true), 500)
+        setTimeout(() => setShowStart(true), 600)
       }
-    }, 300)
+    }, 200)
     return () => clearInterval(interval)
   }, [])
 
   return (
     <div style={styles.container}>
+      {/* CRT scan line effect */}
+      <div style={styles.scanOverlay} />
+      <div style={styles.vignetteOverlay} />
+
       <div style={styles.header}>
         <p style={styles.biosTitle}>JDBIOS (C)2025 Jordi Studios</p>
-        <p style={styles.biosSubtitle}>Jordi Portfolio Showcase v2.5</p>
+        <p style={styles.biosVersion}>v2.5.0 | Build 20250226</p>
       </div>
 
       <div style={styles.body}>
         {loadingLines.map((line, i) => (
-          <p key={i} style={styles.line}>{line}</p>
+          <p key={i} style={line === '' ? styles.spacer : styles.line}>
+            {line}
+          </p>
         ))}
         {!showStart && loadingLines.length < biosLines.length && (
-          <p className="loading" style={styles.line}>Processing</p>
+          <div style={styles.cursorLine}>
+            <span style={styles.line}>{'>'} </span>
+            <div className="blinking-cursor" />
+          </div>
         )}
       </div>
 
       {showStart && (
         <div style={styles.footer}>
           <div style={styles.startPopup}>
-            <p style={styles.showcaseTitle}>Jordi Portfolio Showcase 2025</p>
-            <button style={styles.startButton} onClick={onStart}>
-              <p style={styles.startText}>Click start to begin</p>
-            </button>
+            <div style={styles.popupBorder}>
+              <p style={styles.showcaseTitle}>Jordi Portfolio Showcase 2025</p>
+              <p style={styles.showcaseSubtitle}>&laquo; AI Engineer &middot; Software Developer &raquo;</p>
+              <button
+                style={{
+                  ...styles.startButton,
+                  ...(hoverStart ? styles.startButtonHover : {}),
+                }}
+                onClick={onStart}
+                onMouseEnter={() => setHoverStart(true)}
+                onMouseLeave={() => setHoverStart(false)}
+              >
+                <span style={{
+                  ...styles.startText,
+                  ...(hoverStart ? { color: '#000' } : {}),
+                }}>Click start to begin</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -77,56 +108,106 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'space-between',
     zIndex: 10,
     fontFamily: 'monospace',
+    overflow: 'hidden',
+  },
+  scanOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.008) 2px, rgba(255,255,255,0.008) 4px)',
+    pointerEvents: 'none',
+    zIndex: 2,
+  },
+  vignetteOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)',
+    pointerEvents: 'none',
+    zIndex: 2,
   },
   header: {
-    padding: 48,
+    padding: '48px 48px 0',
+    zIndex: 3,
   },
   biosTitle: {
-    color: '#fff',
+    color: '#aaa',
     fontSize: 16,
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  biosSubtitle: {
-    color: '#888',
-    fontSize: 14,
+  biosVersion: {
+    color: '#555',
+    fontSize: 11,
   },
   body: {
     paddingLeft: 48,
     paddingRight: 48,
     flex: 1,
+    paddingTop: 24,
+    zIndex: 3,
   },
   line: {
-    color: '#fff',
-    fontSize: 14,
-    marginBottom: 4,
+    color: '#ccc',
+    fontSize: 13,
+    marginBottom: 2,
     fontFamily: 'monospace',
+    lineHeight: 1.6,
+  },
+  spacer: {
+    height: 12,
+  },
+  cursorLine: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 2,
   },
   footer: {
-    padding: 48,
-    paddingBottom: 64,
+    padding: '0 48px 64px',
     display: 'flex',
     justifyContent: 'center',
+    zIndex: 3,
   },
   startPopup: {
     textAlign: 'center',
   },
+  popupBorder: {
+    border: '1px solid #333',
+    padding: '32px 48px',
+    backgroundColor: 'rgba(10,10,15,0.8)',
+  },
   showcaseTitle: {
     color: '#fff',
-    fontSize: 18,
-    marginBottom: 24,
+    fontSize: 20,
+    marginBottom: 8,
+    fontFamily: 'monospace',
+    letterSpacing: 1,
+  },
+  showcaseSubtitle: {
+    color: '#666',
+    fontSize: 12,
+    marginBottom: 28,
     fontFamily: 'monospace',
   },
   startButton: {
     backgroundColor: '#000',
-    border: '4px solid #fff',
+    border: '2px solid #fff',
     cursor: 'pointer',
-    padding: 0,
+    padding: '12px 32px',
+    transition: 'all 0.2s ease',
+  },
+  startButtonHover: {
+    backgroundColor: '#fff',
   },
   startText: {
     color: '#fff',
-    padding: '12px 24px',
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'monospace',
-    transition: 'all 0.2s',
+    letterSpacing: 1,
+    transition: 'color 0.2s ease',
   },
 }
+
