@@ -76,7 +76,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 0.7
+    renderer.toneMappingExposure = 1.4
     containerRef.current.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
@@ -85,18 +85,22 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     const lightWood = new THREE.MeshStandardMaterial({ color: 0x3d2b1f, roughness: 0.65, metalness: 0.05 })
     const darkMetal = new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: 0.25, metalness: 0.85 })
     const chrome = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.15, metalness: 0.95 })
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x14141e, roughness: 0.95, metalness: 0.0 })
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1820, roughness: 0.85, metalness: 0.05 })
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x22222e, roughness: 0.95, metalness: 0.0 })
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x252230, roughness: 0.85, metalness: 0.05 })
     const fabric = new THREE.MeshStandardMaterial({ color: 0x1e1e28, roughness: 0.9, metalness: 0 })
     const whiteMat = new THREE.MeshStandardMaterial({ color: 0xe8e0d8, roughness: 0.7 })
     const blackPlastic = new THREE.MeshStandardMaterial({ color: 0x0e0e0e, roughness: 0.5, metalness: 0.3 })
 
     // ── Lighting ──
-    const ambient = new THREE.AmbientLight(0x1a1a30, 0.3)
+    const ambient = new THREE.AmbientLight(0x334466, 0.8)
     scene.add(ambient)
 
+    // Hemisphere light for general fill
+    const hemi = new THREE.HemisphereLight(0x4466aa, 0x1a1820, 0.6)
+    scene.add(hemi)
+
     // Desk lamp (warm)
-    const deskLamp = new THREE.PointLight(0xffaa44, 2.5, 700, 1.5)
+    const deskLamp = new THREE.PointLight(0xffaa44, 80000, 900, 2)
     deskLamp.position.set(-200, 420, 60)
     deskLamp.castShadow = true
     deskLamp.shadow.mapSize.set(1024, 1024)
@@ -104,25 +108,25 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     scene.add(deskLamp)
 
     // Monitor glow (teal/blue)
-    const monitorGlow = new THREE.PointLight(0x3399aa, 1.2, 500, 1.5)
+    const monitorGlow = new THREE.PointLight(0x3399aa, 40000, 600, 2)
     monitorGlow.position.set(0, 300, 20)
     scene.add(monitorGlow)
     monitorGlowRef.current = monitorGlow
 
     // Rim light (purple accent)
-    const rimLight = new THREE.SpotLight(0x6633aa, 0.8, 1200, Math.PI / 6, 0.5)
+    const rimLight = new THREE.SpotLight(0x6633aa, 60000, 1500, Math.PI / 6, 0.5, 2)
     rimLight.position.set(400, 600, -300)
     rimLight.target.position.set(0, 200, 0)
     scene.add(rimLight)
     scene.add(rimLight.target)
 
     // Fill light from below/behind
-    const fillLight = new THREE.PointLight(0x222244, 0.4, 800)
+    const fillLight = new THREE.PointLight(0x334466, 20000, 1000, 2)
     fillLight.position.set(-300, 50, 300)
     scene.add(fillLight)
 
     // Window moonlight
-    const moonLight = new THREE.DirectionalLight(0x4466aa, 0.15)
+    const moonLight = new THREE.DirectionalLight(0x4466aa, 0.6)
     moonLight.position.set(-500, 800, 200)
     scene.add(moonLight)
 
@@ -554,7 +558,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     ledStrip.position.set(0, 12, 115)
     scene.add(ledStrip)
 
-    const ledLight = new THREE.PointLight(0x6633ff, 0.5, 200)
+    const ledLight = new THREE.PointLight(0x6633ff, 5000, 300, 2)
     ledLight.position.set(0, 10, 115)
     scene.add(ledLight)
 
@@ -661,7 +665,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
 
       // Monitor glow pulse
       if (monitorGlowRef.current) {
-        monitorGlowRef.current.intensity = 1.2 + Math.sin(time * 2) * 0.1
+        monitorGlowRef.current.intensity = 40000 + Math.sin(time * 2) * 3000
       }
 
       // Scan line scroll
