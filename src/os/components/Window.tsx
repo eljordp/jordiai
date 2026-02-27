@@ -76,7 +76,11 @@ export default function Window({ windowState, onClose, onMinimize, onFocus, onMo
         <div style={s.titleLeft}>
           <span style={s.titleText}>{windowState.title}</span>
         </div>
-        <div style={s.titleButtons} onMouseDown={e => e.stopPropagation()}>
+        <div
+          style={s.titleButtons}
+          onMouseDown={e => e.stopPropagation()}
+          onTouchStart={e => e.stopPropagation()}
+        >
           <button style={s.winBtn} onClick={onMinimize}>
             <span style={s.btnIcon}>_</span>
           </button>
@@ -142,8 +146,8 @@ const s: Record<string, React.CSSProperties> = {
     gap: isMobile ? 4 : 2,
   },
   winBtn: {
-    width: isMobile ? 32 : 18,
-    height: isMobile ? 28 : 16,
+    width: isMobile ? 44 : 18,
+    height: isMobile ? 34 : 16,
     border: '2px outset #dfdfdf',
     backgroundColor: '#c0c0c0',
     cursor: 'pointer',
