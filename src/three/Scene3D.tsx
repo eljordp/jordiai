@@ -44,14 +44,15 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     const camera = cameraRef.current
     if (!camera) return
     const target = KEYFRAMES[mode]
+    const duration = mode === 'monitor' ? 800 : 1200
     TWEEN.removeAll()
     new TWEEN.Tween(camera.position)
-      .to(target.position, 2000)
-      .easing(TWEEN.Easing.Quintic.InOut)
+      .to(target.position, duration)
+      .easing(TWEEN.Easing.Cubic.InOut)
       .start()
     new TWEEN.Tween(lookAtTarget.current)
-      .to(target.lookAt, 2000)
-      .easing(TWEEN.Easing.Quintic.InOut)
+      .to(target.lookAt, duration)
+      .easing(TWEEN.Easing.Cubic.InOut)
       .start()
   }, [])
 

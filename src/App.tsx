@@ -44,10 +44,10 @@ export default function App() {
   const handleClickMonitor = useCallback(() => {
     if (cameraModeRef.current !== 'monitor') {
       setCameraMode('monitor')
-      setTimeout(() => {
-        setShowOS(true)
-        requestAnimationFrame(() => setOsOpacity(1))
-      }, 1200)
+      setShowOS(true)
+      // Fade in gradually during the camera zoom (2s transition)
+      setOsOpacity(0)
+      requestAnimationFrame(() => setOsOpacity(1))
     }
   }, [])
 
@@ -98,7 +98,7 @@ export default function App() {
           style={{
             ...styles.osContainer,
             opacity: osOpacity,
-            transition: 'opacity 0.5s ease-in-out',
+            transition: 'opacity 0.8s ease-out',
           }}
         >
           {/* CRT overlay effects */}
