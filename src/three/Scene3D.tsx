@@ -7,6 +7,7 @@ interface Props {
   onResourcesLoaded: () => void
   onClickOutside: () => void
   onClickMonitor: () => void
+  onScreenBoundsUpdate?: (bounds: { left: number; top: number; width: number; height: number }) => void
 }
 
 const KEYFRAMES = {
@@ -24,7 +25,7 @@ const KEYFRAMES = {
   },
 }
 
-export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside, onClickMonitor }: Props) {
+export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside, onClickMonitor, onScreenBoundsUpdate }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
@@ -37,8 +38,10 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
   const scanLineMeshRef = useRef<THREE.Mesh | null>(null)
   const lampOnRef = useRef(true)
   const lampGroupRef = useRef<THREE.Group | null>(null)
+  const onScreenBoundsUpdateRef = useRef(onScreenBoundsUpdate)
 
   cameraModeRef.current = cameraMode
+  onScreenBoundsUpdateRef.current = onScreenBoundsUpdate
 
   const transitionCamera = useCallback((mode: 'idle' | 'desk' | 'monitor') => {
     const camera = cameraRef.current
@@ -829,6 +832,17 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     // Signal loaded
     setTimeout(() => onResourcesLoaded(), 2000)
 
+    // ── Pre-allocate for screen projection ──
+    const projVec = new THREE.Vector3()
+    const screenHalfW = 135 // 270/2
+    const screenHalfH = 82  // 164/2
+    const cornerOffsets: [number, number, number][] = [
+      [-screenHalfW, screenHalfH, 0],
+      [screenHalfW, screenHalfH, 0],
+      [-screenHalfW, -screenHalfH, 0],
+      [screenHalfW, -screenHalfH, 0],
+    ]
+
     // ── Animate ──
     let time = 0
     const animate = () => {
@@ -872,6 +886,31 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
       led1.material.opacity = 0.7 + Math.sin(time * 3) * 0.3
 
       camera.lookAt(lookAtTarget.current)
+
+      // Project monitor screen corners to viewport coordinates
+      camera.updateMatrixWorld()
+      if (screenRef.current && onScreenBoundsUpdateRef.current) {
+        let minX = Infinity, maxX = -Infinity
+        let minY = Infinity, maxY = -Infinity
+        for (const [cx, cy, cz] of cornerOffsets) {
+          projVec.set(cx, cy, cz)
+          screenRef.current.localToWorld(projVec)
+          projVec.project(camera)
+          const sx = (projVec.x * 0.5 + 0.5) * window.innerWidth
+          const sy = (-projVec.y * 0.5 + 0.5) * window.innerHeight
+          if (sx < minX) minX = sx
+          if (sx > maxX) maxX = sx
+          if (sy < minY) minY = sy
+          if (sy > maxY) maxY = sy
+        }
+        onScreenBoundsUpdateRef.current({
+          left: minX,
+          top: minY,
+          width: maxX - minX,
+          height: maxY - minY,
+        })
+      }
+
       renderer.render(scene, camera)
     }
     animate()

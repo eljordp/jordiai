@@ -8,9 +8,10 @@ interface Props {
   onFocus: () => void
   onMove: (x: number, y: number) => void
   children: React.ReactNode
+  scaleRef?: { current: number }
 }
 
-export default function Window({ windowState, onClose, onMinimize, onFocus, onMove, children }: Props) {
+export default function Window({ windowState, onClose, onMinimize, onFocus, onMove, children, scaleRef }: Props) {
   const [maximized, setMaximized] = useState(false)
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -23,8 +24,9 @@ export default function Window({ windowState, onClose, onMinimize, onFocus, onMo
     const origY = windowState.y
 
     const handleMove = (ev: MouseEvent) => {
-      const dx = ev.clientX - startX
-      const dy = ev.clientY - startY
+      const scale = scaleRef?.current ?? 1
+      const dx = (ev.clientX - startX) / scale
+      const dy = (ev.clientY - startY) / scale
       onMove(origX + dx, origY + dy)
     }
 

@@ -11,6 +11,9 @@ export default function App() {
   const [osOpacity, setOsOpacity] = useState(0)
   const [cameraMode, setCameraMode] = useState<'idle' | 'desk' | 'monitor'>('idle')
   const cameraModeRef = useRef(cameraMode)
+  const osContainerRef = useRef<HTMLDivElement>(null)
+  const osContentRef = useRef<HTMLDivElement>(null)
+  const osScaleRef = useRef(1)
   cameraModeRef.current = cameraMode
 
   const handleResourcesLoaded = useCallback(() => {
@@ -45,9 +48,23 @@ export default function App() {
     if (cameraModeRef.current !== 'monitor') {
       setCameraMode('monitor')
       setShowOS(true)
-      // Fade in gradually during the camera zoom (2s transition)
       setOsOpacity(0)
-      requestAnimationFrame(() => setOsOpacity(1))
+      setTimeout(() => setOsOpacity(1), 300)
+    }
+  }, [])
+
+  const handleScreenBoundsUpdate = useCallback((bounds: { left: number; top: number; width: number; height: number }) => {
+    if (osContainerRef.current) {
+      const el = osContainerRef.current
+      el.style.left = `${bounds.left}px`
+      el.style.top = `${bounds.top}px`
+      el.style.width = `${bounds.width}px`
+      el.style.height = `${bounds.height}px`
+    }
+    if (osContentRef.current) {
+      const scale = Math.min(bounds.width / 1024, bounds.height / 640)
+      osScaleRef.current = scale
+      osContentRef.current.style.transform = `scale(${scale})`
     }
   }, [])
 
@@ -76,6 +93,7 @@ export default function App() {
         onResourcesLoaded={handleResourcesLoaded}
         onClickOutside={handleClickOutside}
         onClickMonitor={handleClickMonitor}
+        onScreenBoundsUpdate={handleScreenBoundsUpdate}
       />
 
       {appState === 'loading' && (
@@ -95,17 +113,22 @@ export default function App() {
 
       {showOS && appState === 'running' && (
         <div
+          ref={osContainerRef}
           style={{
-            ...styles.osContainer,
+            position: 'fixed',
+            zIndex: 5,
+            overflow: 'hidden',
             opacity: osOpacity,
-            transition: 'opacity 0.8s ease-out',
+            transition: 'opacity 0.4s ease',
+            pointerEvents: osOpacity > 0 ? 'auto' : 'none',
+            borderRadius: 2,
           }}
         >
           {/* CRT overlay effects */}
           <div style={styles.crtOverlay} />
           <div style={styles.scanLines} />
 
-          {/* EXIT BUTTON — always visible */}
+          {/* EXIT BUTTON */}
           <button
             style={styles.exitButton}
             onClick={exitMonitor}
@@ -122,7 +145,17 @@ export default function App() {
             <span style={styles.exitLabel}>Back</span>
           </button>
 
-          <OSWindow />
+          <div
+            ref={osContentRef}
+            style={{
+              width: 1024,
+              height: 640,
+              transformOrigin: 'top left',
+              position: 'relative',
+            }}
+          >
+            <OSWindow scaleRef={osScaleRef} />
+          </div>
         </div>
       )}
 
@@ -174,15 +207,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 12,
     fontFamily: 'monospace',
   },
-  osContainer: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    zIndex: 5,
-    pointerEvents: 'auto',
-  },
   crtOverlay: {
     position: 'absolute',
     top: 0,
@@ -191,7 +215,7 @@ const styles: Record<string, React.CSSProperties> = {
     bottom: 0,
     pointerEvents: 'none',
     zIndex: 9998,
-    background: 'radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.15) 100%)',
+    background: 'radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.2) 100%)',
   },
   scanLines: {
     position: 'absolute',
@@ -201,8 +225,8 @@ const styles: Record<string, React.CSSProperties> = {
     bottom: 0,
     pointerEvents: 'none',
     zIndex: 9998,
-    backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)',
-    opacity: 0.5,
+    backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)',
+    opacity: 0.4,
   },
   exitButton: {
     position: 'absolute',
