@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { type WindowState } from '../OSWindow'
 
 interface Props {
@@ -11,28 +11,24 @@ interface Props {
 }
 
 export default function Window({ windowState, onClose, onMinimize, onFocus, onMove, children }: Props) {
-  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
   const [maximized, setMaximized] = useState(false)
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (maximized) return
+    e.preventDefault()
     onFocus()
-    dragRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      origX: windowState.x,
-      origY: windowState.y,
-    }
+    const startX = e.clientX
+    const startY = e.clientY
+    const origX = windowState.x
+    const origY = windowState.y
 
     const handleMove = (ev: MouseEvent) => {
-      if (!dragRef.current) return
-      const dx = ev.clientX - dragRef.current.startX
-      const dy = ev.clientY - dragRef.current.startY
-      onMove(dragRef.current.origX + dx, dragRef.current.origY + dy)
+      const dx = ev.clientX - startX
+      const dy = ev.clientY - startY
+      onMove(origX + dx, origY + dy)
     }
 
     const handleUp = () => {
-      dragRef.current = null
       window.removeEventListener('mousemove', handleMove)
       window.removeEventListener('mouseup', handleUp)
     }
@@ -51,7 +47,7 @@ export default function Window({ windowState, onClose, onMinimize, onFocus, onMo
         <div style={styles.titleLeft}>
           <span style={styles.titleText}>{windowState.title}</span>
         </div>
-        <div style={styles.titleButtons}>
+        <div style={styles.titleButtons} onMouseDown={e => e.stopPropagation()}>
           <button style={styles.winBtn} onClick={onMinimize}>
             <span style={styles.btnIcon}>_</span>
           </button>
