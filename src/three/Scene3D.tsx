@@ -35,6 +35,8 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
   const cameraModeRef = useRef(cameraMode)
   const monitorGlowRef = useRef<THREE.PointLight | null>(null)
   const scanLineMeshRef = useRef<THREE.Mesh | null>(null)
+  const lampOnRef = useRef(true)
+  const lampGroupRef = useRef<THREE.Group | null>(null)
 
   cameraModeRef.current = cameraMode
 
@@ -62,7 +64,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
 
     // ── Scene ──
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x050508)
+    scene.background = new THREE.Color(0x8899aa)
 
     // ── Camera ──
     const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, 5000)
@@ -76,31 +78,31 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.4
+    renderer.toneMappingExposure = 1.8
     containerRef.current.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
     // ── Materials ──
-    const darkWood = new THREE.MeshStandardMaterial({ color: 0x2a1a0e, roughness: 0.7, metalness: 0.05 })
-    const lightWood = new THREE.MeshStandardMaterial({ color: 0x3d2b1f, roughness: 0.65, metalness: 0.05 })
-    const darkMetal = new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: 0.25, metalness: 0.85 })
-    const chrome = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.15, metalness: 0.95 })
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x22222e, roughness: 0.95, metalness: 0.0 })
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x252230, roughness: 0.85, metalness: 0.05 })
-    const fabric = new THREE.MeshStandardMaterial({ color: 0x1e1e28, roughness: 0.9, metalness: 0 })
-    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xe8e0d8, roughness: 0.7 })
-    const blackPlastic = new THREE.MeshStandardMaterial({ color: 0x0e0e0e, roughness: 0.5, metalness: 0.3 })
+    const darkWood = new THREE.MeshStandardMaterial({ color: 0x4a3020, roughness: 0.7, metalness: 0.05 })
+    const lightWood = new THREE.MeshStandardMaterial({ color: 0x6d4c3a, roughness: 0.65, metalness: 0.05 })
+    const darkMetal = new THREE.MeshStandardMaterial({ color: 0x2a2a30, roughness: 0.25, metalness: 0.85 })
+    const chrome = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.15, metalness: 0.95 })
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x778899, roughness: 0.95, metalness: 0.0 })
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x554840, roughness: 0.85, metalness: 0.05 })
+    const fabric = new THREE.MeshStandardMaterial({ color: 0x333344, roughness: 0.9, metalness: 0 })
+    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf0ece8, roughness: 0.7 })
+    const blackPlastic = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.3 })
 
     // ── Lighting ──
-    const ambient = new THREE.AmbientLight(0x334466, 0.8)
+    // Light mode: bright room
+    const ambient = new THREE.AmbientLight(0xffffff, 1.5)
     scene.add(ambient)
 
-    // Hemisphere light for general fill
-    const hemi = new THREE.HemisphereLight(0x4466aa, 0x1a1820, 0.6)
+    const hemi = new THREE.HemisphereLight(0xddeeff, 0x8B7355, 1.2)
     scene.add(hemi)
 
-    // Desk lamp (warm)
-    const deskLamp = new THREE.PointLight(0xffaa44, 80000, 900, 2)
+    // Desk lamp (warm) — the main togglable light
+    const deskLamp = new THREE.PointLight(0xffcc88, 200000, 1200, 2)
     deskLamp.position.set(-200, 420, 60)
     deskLamp.castShadow = true
     deskLamp.shadow.mapSize.set(1024, 1024)
@@ -108,27 +110,52 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     scene.add(deskLamp)
 
     // Monitor glow (teal/blue)
-    const monitorGlow = new THREE.PointLight(0x3399aa, 40000, 600, 2)
+    const monitorGlow = new THREE.PointLight(0x66ccdd, 60000, 600, 2)
     monitorGlow.position.set(0, 300, 20)
     scene.add(monitorGlow)
     monitorGlowRef.current = monitorGlow
 
     // Rim light (purple accent)
-    const rimLight = new THREE.SpotLight(0x6633aa, 60000, 1500, Math.PI / 6, 0.5, 2)
+    const rimLight = new THREE.SpotLight(0x8855cc, 80000, 1500, Math.PI / 6, 0.5, 2)
     rimLight.position.set(400, 600, -300)
     rimLight.target.position.set(0, 200, 0)
     scene.add(rimLight)
     scene.add(rimLight.target)
 
-    // Fill light from below/behind
-    const fillLight = new THREE.PointLight(0x334466, 20000, 1000, 2)
+    // Fill light
+    const fillLight = new THREE.PointLight(0x88aacc, 40000, 1200, 2)
     fillLight.position.set(-300, 50, 300)
     scene.add(fillLight)
 
-    // Window moonlight
-    const moonLight = new THREE.DirectionalLight(0x4466aa, 0.6)
-    moonLight.position.set(-500, 800, 200)
-    scene.add(moonLight)
+    // Overhead room light
+    const ceilingLight = new THREE.PointLight(0xffeedd, 300000, 1500, 2)
+    ceilingLight.position.set(0, 900, 100)
+    ceilingLight.castShadow = true
+    scene.add(ceilingLight)
+
+    // Window daylight
+    const dayLight = new THREE.DirectionalLight(0xffffff, 2.0)
+    dayLight.position.set(-500, 800, 200)
+    dayLight.castShadow = true
+    scene.add(dayLight)
+
+    // ── Lamp toggle state ──
+    let lampIsOn = lampOnRef.current
+    const bulbColor = { on: 0xffcc66, off: 0x333333 }
+
+    const setLightMode = (on: boolean) => {
+      lampIsOn = on
+      lampOnRef.current = on
+      // Light mode = lamp on = bright room
+      ambient.intensity = on ? 1.5 : 0.15
+      hemi.intensity = on ? 1.2 : 0.2
+      deskLamp.intensity = on ? 200000 : 80000
+      ceilingLight.intensity = on ? 300000 : 0
+      dayLight.intensity = on ? 2.0 : 0.0
+      fillLight.intensity = on ? 40000 : 10000
+      rimLight.intensity = on ? 80000 : 40000
+      scene.background = new THREE.Color(on ? 0x8899aa : 0x050508)
+    }
 
     // ── Room ──
     // Floor
@@ -329,10 +356,11 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     pad.position.set(0, -2, 0)
     mouseGroup.add(pad)
 
-    // ── Desk Lamp ──
+    // ── Desk Lamp (clickable — toggles light/dark) ──
     const lampGroup = new THREE.Group()
     lampGroup.position.set(-210, 170, 50)
     scene.add(lampGroup)
+    lampGroupRef.current = lampGroup
 
     // Lamp base
     const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(20, 22, 6, 16), chrome)
@@ -355,10 +383,8 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     lampGroup.add(lampShade)
 
     // Lamp bulb glow
-    const bulbGlow = new THREE.Mesh(
-      new THREE.SphereGeometry(6, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0xffcc66 })
-    )
+    const bulbMat = new THREE.MeshBasicMaterial({ color: bulbColor.on })
+    const bulbGlow = new THREE.Mesh(new THREE.SphereGeometry(6, 8, 8), bulbMat)
     bulbGlow.position.set(15, 200, -10)
     lampGroup.add(bulbGlow)
 
@@ -611,6 +637,16 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
       mouseVec.x = (event.clientX / window.innerWidth) * 2 - 1
       mouseVec.y = -(event.clientY / window.innerHeight) * 2 + 1
       raycaster.setFromCamera(mouseVec, camera)
+
+      // Check lamp click (toggle light/dark)
+      const lampHits = raycaster.intersectObjects(lampGroup.children, true)
+      if (lampHits.length > 0) {
+        lampIsOn = !lampIsOn
+        setLightMode(lampIsOn)
+        bulbMat.color.setHex(lampIsOn ? bulbColor.on : bulbColor.off)
+        return
+      }
+
       const intersects = raycaster.intersectObject(screen)
       if (intersects.length > 0) {
         onClickMonitor()
@@ -665,7 +701,8 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
 
       // Monitor glow pulse
       if (monitorGlowRef.current) {
-        monitorGlowRef.current.intensity = 40000 + Math.sin(time * 2) * 3000
+        const baseGlow = lampIsOn ? 60000 : 40000
+        monitorGlowRef.current.intensity = baseGlow + Math.sin(time * 2) * 3000
       }
 
       // Scan line scroll
