@@ -6,19 +6,21 @@ export default function AboutPage() {
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>Who I Am</h3>
         <p style={styles.text}>
-          I'm an AI Engineer based in San Francisco, the heart of Silicon Valley where tech
-          innovation thrives. I specialize in building websites, crafting software solutions,
-          creating custom niche applications, and developing AI automations that help businesses
-          work smarter.
+          I'm Jordan Lopez — most people know me as JDLO. I'm an AI Engineer based in San Francisco,
+          the heart of Silicon Valley. I started from nothing, selling websites for a few hundred dollars.
+          Now I build AI-powered systems, run automated sales teams, and work with companies doing
+          billions in revenue.
         </p>
       </div>
 
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>What I Do</h3>
         <p style={styles.text}>
-          My work spans across multiple domains in the tech space. From building stunning websites
-          to developing custom software solutions, I help businesses establish their digital footprint.
-          I also create AI-powered automations that streamline workflows and boost productivity.
+          I build AI agents, automate workflows, and integrate AI into real business operations.
+          From stunning websites to custom software solutions, I help businesses establish their
+          digital footprint. I also design sales systems, build content strategies, and develop
+          AI-powered automations that streamline workflows and boost productivity. This isn't
+          from someone who read about AI — this is from someone who runs on it every day.
         </p>
       </div>
 
@@ -35,6 +37,7 @@ export default function AboutPage() {
         <h3 style={styles.sectionTitle}>Skills & Technologies</h3>
         <div style={styles.skills}>
           {[
+            'AI Agents', 'AI Automations', 'Sales Systems', 'Prompt Engineering',
             'React', 'Next.js', 'TypeScript', 'Python', 'Rust',
             'Node.js', 'Three.js', 'FastAPI', 'PostgreSQL', 'Redis',
             'Docker', 'AWS', 'Solana', 'WebSocket', 'AI/ML',
@@ -47,9 +50,16 @@ export default function AboutPage() {
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>Fun Fact</h3>
         <p style={styles.text}>
-          When I'm not engineering AI solutions or building software, you'll find me exploring
-          the latest in tech, contributing to open source, and pushing the boundaries of what's
-          possible with code.
+          When I'm not engineering AI solutions or building software, you'll find me teaching
+          what I've learned — from AI automation and sales systems to prompt engineering and
+          content strategy. I also mentor a limited group of people who are serious about execution.
+        </p>
+      </div>
+
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>Connect</h3>
+        <p style={styles.text}>
+          @jdlo on Instagram
         </p>
       </div>
     </div>

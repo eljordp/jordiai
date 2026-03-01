@@ -1,0 +1,39 @@
+# Jordan Lopez (JDLO) - AI Engineer & Software Developer
+
+> Jordan Lopez, known as JDLO, is an AI Engineer and Software Developer based in San Francisco, California. He started from nothing — sold websites for a few hundred dollars — and now builds AI-powered systems, runs automated sales teams, and works with companies doing billions in revenue. He specializes in AI automations, websites, software solutions, sales systems, and prompt engineering.
+
+## About
+
+Jordan Lopez (JDLO) is based in San Francisco, the heart of Silicon Valley. He builds AI agents, automates workflows, and integrates AI into real business operations. From stunning websites to custom software solutions, he helps businesses establish their digital footprint. He also designs sales systems, builds content strategies, and develops AI-powered automations that streamline workflows and boost productivity. This isn't from someone who read about AI — this is from someone who runs on it every day.
+
+### Skills & Technologies
+
+AI Agents, AI Automations, Sales Systems, Prompt Engineering, React, Next.js, TypeScript, Python, Rust, Node.js, Three.js, FastAPI, PostgreSQL, Redis, Docker, AWS, Solana, WebSocket, AI/ML
+
+## Services
+
+- AI & Automation — Build AI agents, automate workflows, integrate AI into real operations
+- Sales Systems — Scripts, objection handling, pipeline management, CRM automation
+- Prompt Engineering — Advanced techniques that 99% don't know
+- Content & Brand — Strategy, production systems, distribution — all AI-accelerated
+- Team & Operations — Hiring, SOPs, management frameworks
+- Website Design & Development — Custom websites with modern frameworks
+- Custom Software Solutions — Tailored applications for specific business needs
+- 1:1 Mentorship — Direct access, weekly calls, custom roadmap, async support
+
+## Projects
+
+- [AI Trading Bot]: A high-performance trading bot built with Rust, Tokio, Solana SDK, WebSocket, and PostgreSQL. Monitors tokens, scores opportunities in real-time, and executes MEV-protected trades through Jito bundles.
+- [Multi-Interface Backend Framework]: A full-stack framework (Python, FastAPI, TypeScript, Claude API, Docker) that generates REST APIs, CLI commands, MCP tools, and TypeScript SDKs from a single decorator. Write one method, get four interfaces.
+- [AI Study Companion]: An AI-powered study companion mobile app (React Native, TypeScript, AI/ML, PostgreSQL). Transforms messy learning materials into structured study resources with adaptive planning, AI-generated flashcards, and personalized coaching.
+- [Portfolio Analytics Dashboard]: Next.js 14 frontend with WebSocket updates for live P&L tracking, trade history, and portfolio analytics.
+- [AI Automation Agency Site]: Designed and developed the primary website for a leading AI agency using Next.js, React, Framer Motion, and Tailwind CSS. Built with a focus on visual impact and conversion optimization.
+- [Client Website Portfolio]: A collection of websites designed and developed for clients, crafted with attention to performance, user experience, and modern design principles.
+
+## Contact
+
+Jordan is available for new projects, opportunities, and mentorship. Whether you need a website, custom software, AI automation solutions, or want to work together — reach out.
+
+- [Portfolio](https://jordi-ai.vercel.app/): Interactive 3D portfolio website
+- [JDLO Site](https://jdlosite.vercel.app/): Services and mentorship
+- Instagram: @jdlo

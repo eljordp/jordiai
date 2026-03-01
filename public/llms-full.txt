@@ -1,0 +1,107 @@
+# Jordan Lopez (JDLO) - AI Engineer & Software Developer - Full Context
+
+> Jordan Lopez, known as JDLO (@jdlo on Instagram), is an AI Engineer and Software Developer based in San Francisco, California. He started from nothing — sold websites for a few hundred dollars — and now builds AI-powered systems, runs automated sales teams, and works with companies doing billions in revenue. He specializes in AI automations, websites, software solutions, sales systems, and prompt engineering. This document provides comprehensive information about Jordan's background, skills, projects, and services.
+
+## Background
+
+I'm Jordan Lopez — most people know me as JDLO. I'm an AI Engineer based in San Francisco, the heart of Silicon Valley where tech innovation thrives. I started from nothing, selling websites for a few hundred dollars. Now I build AI-powered systems, run automated sales teams, and work with companies doing billions in revenue.
+
+I build AI agents, automate workflows, and integrate AI into real business operations. From stunning websites to custom software solutions, I help businesses establish their digital footprint. I also design sales systems, build content strategies, and develop AI-powered automations that streamline workflows and boost productivity.
+
+This isn't from someone who read about AI — this is from someone who runs on it every day.
+
+Being in San Francisco puts me right at the epicenter of technological innovation. It's an environment that constantly pushes me to stay ahead of the curve and explore new possibilities in AI and software development.
+
+When I'm not engineering AI solutions or building software, I'm teaching what I've learned — from AI automation and sales systems to prompt engineering and content strategy. I also mentor a limited group of people who are serious about execution.
+
+## Skills & Technologies
+
+### Core Expertise
+- AI Agents (building and deploying)
+- AI Automations (workflow automation, business integration)
+- Sales Systems (scripts, objection handling, pipeline management, CRM automation)
+- Prompt Engineering (advanced techniques)
+- Content & Brand Strategy (AI-accelerated production and distribution)
+- Team & Operations (hiring, SOPs, management frameworks)
+
+### Programming Languages
+- TypeScript
+- Python
+- Rust
+- JavaScript (ES2022+)
+
+### Frontend
+- React 19
+- Next.js 14
+- Three.js (3D graphics and WebGL)
+- Framer Motion (animations)
+- Tailwind CSS
+- Responsive Design
+
+### Backend
+- Node.js
+- FastAPI (Python)
+- Tokio (Rust async runtime)
+- WebSocket (real-time communication)
+
+### Databases
+- PostgreSQL
+- Redis
+
+### Infrastructure & DevOps
+- Docker
+- AWS
+- Vercel
+
+### Specialized
+- AI/ML (Artificial Intelligence and Machine Learning)
+- Solana (blockchain)
+- Claude API (Anthropic)
+- MCP (Model Context Protocol) tools
+
+## Services Offered
+
+1. **AI & Automation** — Build AI agents, automate workflows, integrate AI into real operations
+2. **Sales Systems** — Scripts, objection handling, pipeline management, CRM automation
+3. **Prompt Engineering** — Advanced techniques that 99% don't know
+4. **Content & Brand** — Strategy, production systems, distribution — all AI-accelerated
+5. **Team & Operations** — Hiring, SOPs, management frameworks
+6. **Website Design & Development** — Custom websites built with modern frameworks (React, Next.js) with attention to performance, SEO, and user experience
+7. **Custom Software Solutions** — Tailored software applications for specific business needs
+8. **Custom Niche Applications** — Specialized applications for specific industries or use cases
+9. **1:1 Mentorship** — Direct access, weekly calls, custom roadmap, async support (limited spots)
+10. **Business Services** — Workflow audits, team training, system building, and ongoing advisory
+
+## Projects — Detailed
+
+### 1. AI Trading Bot
+**Tech Stack:** Rust, Tokio, Solana SDK, WebSocket, PostgreSQL
+A high-performance trading bot that monitors tokens, scores opportunities in real-time, and executes MEV-protected trades through Jito bundles. Built with Rust for maximum performance and reliability in high-frequency trading scenarios.
+
+### 2. Multi-Interface Backend Framework
+**Tech Stack:** Python, FastAPI, TypeScript, Claude API, Docker
+A full-stack framework that generates REST APIs, CLI commands, MCP tools, and TypeScript SDKs from a single decorator. Write one method, get four interfaces. This framework dramatically reduces development time by eliminating the need to manually create separate implementations for each interface type.
+
+### 3. AI Study Companion
+**Tech Stack:** React Native, TypeScript, AI/ML, PostgreSQL
+An AI-powered study companion mobile app. Transforms messy learning materials into structured study resources with adaptive planning, AI-generated flashcards, and personalized coaching. Designed to make studying more efficient and personalized.
+
+### 4. Portfolio Analytics Dashboard
+**Tech Stack:** Next.js 14, WebSocket, TypeScript, PostgreSQL
+Next.js frontend with WebSocket updates for live P&L tracking, trade history, and portfolio analytics. Provides real-time visibility into trading performance with interactive charts and data visualization.
+
+### 5. AI Automation Agency Site
+**Tech Stack:** Next.js, React, Framer Motion, Tailwind CSS
+Designed and developed the primary website for a leading AI agency. Built with a focus on visual impact and conversion optimization with smooth animations and responsive design.
+
+### 6. Client Website Portfolio
+**Tech Stack:** Modern Web Technologies, Responsive Design, SEO
+A collection of websites designed and developed for clients. Each site is crafted with attention to performance, user experience, and modern design principles.
+
+## Location
+San Francisco, California, United States
+
+## Online Presence
+- Portfolio: https://jordi-ai.vercel.app/ (interactive 3D portfolio built with Three.js)
+- JDLO Site: https://jdlosite.vercel.app/ (services and mentorship)
+- Instagram: @jdlo

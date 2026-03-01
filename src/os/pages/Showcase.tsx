@@ -14,7 +14,8 @@ export default function Showcase({ onNavigate }: Props) {
 
       <div style={styles.bio}>
         <p style={styles.text}>
-          I'm an AI Engineer passionate about building innovative digital experiences.
+          Started from nothing — sold websites for a few hundred dollars. Now I build AI-powered
+          systems, run automated sales teams, and work with companies doing billions in revenue.
           I specialize in building websites, crafting software solutions, creating custom
           niche applications, and developing AI automations that help businesses work smarter.
         </p>

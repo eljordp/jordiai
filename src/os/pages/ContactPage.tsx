@@ -15,11 +15,12 @@ export default function ContactPage() {
 
       <p style={styles.text}>
         I'm always excited to hear about new projects and opportunities. Whether you need
-        a website, custom software, or AI automation solutions, I'd love to chat!
+        a website, custom software, AI automation solutions, or want to work together — I'd love to chat.
       </p>
 
       <p style={styles.text}>
-        All messages get forwarded straight to my personal email.
+        All messages get forwarded straight to my personal email. You can also find me on
+        Instagram @jdlo.
       </p>
 
       {sent ? (
