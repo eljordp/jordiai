@@ -394,8 +394,8 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     // Load AirPods (desk accessory)
     loader.load('/models/airpods/scene.gltf', (gltf) => {
       const model = gltf.scene
-      model.scale.set(120, 120, 120)
-      model.position.set(180, 170, 80)
+      model.scale.set(30, 30, 30)
+      model.position.set(180, 172, 80)
       model.rotation.y = -0.4
 
       model.traverse((child) => {
@@ -411,8 +411,8 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     // Load iPhone (desk accessory)
     loader.load('/models/iphone/scene.gltf', (gltf) => {
       const model = gltf.scene
-      model.scale.set(80, 80, 80)
-      model.position.set(-160, 170, 80)
+      model.scale.set(18, 18, 18)
+      model.position.set(-160, 172, 80)
       model.rotation.x = -Math.PI / 2
       model.rotation.z = 0.3
 
