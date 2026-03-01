@@ -836,14 +836,14 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
       time += 0.016
       TWEEN.update()
 
-      // Mouse parallax (subtle when in idle/desk, none when in monitor)
+      // Mouse parallax — camera follows cursor
       const mode = cameraModeRef.current
       if (mode !== 'monitor') {
-        const parallaxStrength = mode === 'idle' ? 15 : 6
+        const parallaxStrength = mode === 'idle' ? 30 : 20
         const targetX = KEYFRAMES[mode].position.x + mousePos.current.x * parallaxStrength
         const targetY = KEYFRAMES[mode].position.y - mousePos.current.y * parallaxStrength * 0.5
-        camera.position.x += (targetX - camera.position.x) * 0.02
-        camera.position.y += (targetY - camera.position.y) * 0.02
+        camera.position.x += (targetX - camera.position.x) * 0.08
+        camera.position.y += (targetY - camera.position.y) * 0.08
       }
 
       // Gentle particle float
