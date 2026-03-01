@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import BiosScreen from './components/BiosScreen'
 import Scene3D from './three/Scene3D'
 import OSWindow from './os/OSWindow'
@@ -8,7 +9,6 @@ type AppState = 'loading' | 'bios' | 'running'
 export default function App() {
   const [appState, setAppState] = useState<AppState>('loading')
   const [showOS, setShowOS] = useState(false)
-  const [osOpacity, setOsOpacity] = useState(0)
   const [cameraMode, setCameraMode] = useState<'idle' | 'desk' | 'monitor'>('idle')
   const cameraModeRef = useRef(cameraMode)
   cameraModeRef.current = cameraMode
@@ -23,11 +23,8 @@ export default function App() {
   }, [])
 
   const exitMonitor = useCallback(() => {
-    setOsOpacity(0)
-    setTimeout(() => {
-      setShowOS(false)
-      setCameraMode('desk')
-    }, 400)
+    setShowOS(false)
+    setCameraMode('desk')
   }, [])
 
   const handleClickOutside = useCallback(() => {
@@ -45,8 +42,6 @@ export default function App() {
     if (cameraModeRef.current !== 'monitor') {
       setCameraMode('monitor')
       setShowOS(true)
-      setOsOpacity(0)
-      setTimeout(() => setOsOpacity(1), 300)
     }
   }, [])
 
@@ -77,56 +72,81 @@ export default function App() {
         onEnterMonitor={handleEnterMonitor}
       />
 
-      {appState === 'loading' && (
-        <div style={styles.overlay}>
-          <div style={styles.loadingInner}>
-            <div style={styles.loadingBar}>
-              <div style={styles.loadingFill} />
-            </div>
-            <p style={styles.loadingText} className="loading">Initializing</p>
-          </div>
-        </div>
-      )}
-
-      {appState === 'bios' && (
-        <BiosScreen onStart={handleStart} />
-      )}
-
-      {showOS && appState === 'running' && (
-        <div
-          style={{
-            ...styles.osContainer,
-            opacity: osOpacity,
-          }}
-        >
-          <div style={styles.crtOverlay} />
-          <div style={styles.scanLines} />
-
-          <button
-            style={styles.exitButton}
-            onClick={exitMonitor}
-            onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.6)'
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
-            }}
+      <AnimatePresence>
+        {appState === 'loading' && (
+          <motion.div
+            key="loading"
+            style={styles.overlay}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            <span style={styles.exitArrow}>&#8592;</span>
-            <span style={styles.exitLabel}>Back</span>
-          </button>
+            <div style={styles.loadingInner}>
+              <div style={styles.loadingBar}>
+                <div style={styles.loadingFill} />
+              </div>
+              <p style={styles.loadingText} className="loading">Initializing</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          <OSWindow />
-        </div>
-      )}
+      <AnimatePresence>
+        {appState === 'bios' && (
+          <motion.div
+            key="bios"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <BiosScreen onStart={handleStart} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {appState === 'running' && cameraMode === 'desk' && !showOS && (
-        <div style={styles.hint}>
-          <p style={styles.hintText}>Click the monitor to enter</p>
-        </div>
-      )}
+      <AnimatePresence>
+        {showOS && appState === 'running' && (
+          <motion.div
+            key="os"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            style={styles.osContainer}
+          >
+            <button
+              style={styles.exitButton}
+              onClick={exitMonitor}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.6)'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
+              }}
+            >
+              <span style={styles.exitArrow}>&#8592;</span>
+              <span style={styles.exitLabel}>Back</span>
+            </button>
+
+            <OSWindow />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {appState === 'running' && cameraMode === 'desk' && !showOS && (
+          <motion.div
+            key="hint"
+            style={styles.hint}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.4 }}
+          >
+            <p style={styles.hintText}>Click the screen to enter</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }
@@ -177,29 +197,7 @@ const styles: Record<string, React.CSSProperties> = {
     height: '100%',
     zIndex: 5,
     pointerEvents: 'auto',
-    transition: 'opacity 0.4s ease',
     overflow: 'hidden',
-  },
-  crtOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    pointerEvents: 'none',
-    zIndex: 9998,
-    background: 'radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.2) 100%)',
-  },
-  scanLines: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    pointerEvents: 'none',
-    zIndex: 9998,
-    backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)',
-    opacity: 0.4,
   },
   exitButton: {
     position: 'absolute',
@@ -212,10 +210,10 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '6px 14px',
     backgroundColor: 'rgba(0,0,0,0.6)',
     border: '1px solid rgba(255,255,255,0.2)',
-    borderRadius: 6,
+    borderRadius: 8,
     cursor: 'pointer',
     transition: 'all 0.2s ease',
-    backdropFilter: 'blur(4px)',
+    backdropFilter: 'blur(8px)',
   },
   exitArrow: {
     color: '#fff',
@@ -225,8 +223,9 @@ const styles: Record<string, React.CSSProperties> = {
   exitLabel: {
     color: '#fff',
     fontSize: 11,
-    fontFamily: 'monospace',
-    letterSpacing: 1,
+    fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+    letterSpacing: 0.5,
+    fontWeight: 500,
   },
   hint: {
     position: 'fixed',
@@ -234,13 +233,13 @@ const styles: Record<string, React.CSSProperties> = {
     left: '50%',
     transform: 'translateX(-50%)',
     zIndex: 4,
-    animation: 'fade-pulse 2s ease-in-out infinite',
   },
   hintText: {
     color: 'rgba(255,255,255,0.5)',
     fontSize: 14,
-    fontFamily: 'monospace',
+    fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
     textShadow: '0 0 10px rgba(68,136,255,0.3)',
-    letterSpacing: 2,
+    letterSpacing: 1,
+    fontWeight: 400,
   },
 }

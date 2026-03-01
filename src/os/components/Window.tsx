@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react'
+import { motion } from 'framer-motion'
 import { type WindowState } from '../OSWindow'
+import { theme } from '../theme'
 
 const isMobile = window.innerWidth < 768
 
@@ -14,6 +16,7 @@ interface Props {
 
 export default function Window({ windowState, onClose, onMinimize, onFocus, onMove, children }: Props) {
   const [maximized, setMaximized] = useState(isMobile)
+  const [trafficHover, setTrafficHover] = useState(false)
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (maximized) return
@@ -64,124 +67,132 @@ export default function Window({ windowState, onClose, onMinimize, onFocus, onMo
     window.addEventListener('touchend', handleUp)
   }, [windowState.x, windowState.y, onFocus, onMove, maximized])
 
-  const taskbarH = isMobile ? 44 : 32
+  const dockH = isMobile ? 72 : 68
 
   const style: React.CSSProperties = maximized
-    ? { ...s.window, top: 0, left: 0, width: '100%', height: `calc(100% - ${taskbarH}px)`, zIndex: windowState.zIndex }
+    ? { ...s.window, top: 0, left: 0, width: '100%', height: `calc(100% - ${dockH}px)`, zIndex: windowState.zIndex }
     : { ...s.window, top: windowState.y, left: windowState.x, width: windowState.width, height: windowState.height, zIndex: windowState.zIndex }
 
   return (
-    <div style={style} onMouseDown={onFocus}>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.92, y: 16 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.96, y: 8 }}
+      transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+      style={style}
+      onMouseDown={onFocus}
+    >
+      {/* Title bar */}
       <div style={s.titleBar} onMouseDown={handleMouseDown} onTouchStart={handleTouchStart}>
-        <div style={s.titleLeft}>
-          <span style={s.titleText}>{windowState.title}</span>
-        </div>
+        {/* Traffic lights */}
         <div
-          style={s.titleButtons}
+          style={s.trafficLights}
+          onMouseEnter={() => setTrafficHover(true)}
+          onMouseLeave={() => setTrafficHover(false)}
           onMouseDown={e => e.stopPropagation()}
           onTouchStart={e => e.stopPropagation()}
         >
-          <button style={s.winBtn} onClick={onMinimize}>
-            <span style={s.btnIcon}>_</span>
+          <button
+            style={{ ...s.trafficBtn, backgroundColor: theme.colors.closeBtn }}
+            onClick={onClose}
+          >
+            {trafficHover && <span style={s.trafficIcon}>&#x2715;</span>}
+          </button>
+          <button
+            style={{ ...s.trafficBtn, backgroundColor: theme.colors.minimizeBtn }}
+            onClick={onMinimize}
+          >
+            {trafficHover && <span style={s.trafficIcon}>&#x2013;</span>}
           </button>
           {!isMobile && (
-            <button style={s.winBtn} onClick={() => setMaximized(!maximized)}>
-              <span style={s.btnIcon}>□</span>
+            <button
+              style={{ ...s.trafficBtn, backgroundColor: theme.colors.maximizeBtn }}
+              onClick={() => setMaximized(!maximized)}
+            >
+              {trafficHover && <span style={s.trafficIcon}>&#x2B1A;</span>}
             </button>
           )}
-          <button style={{ ...s.winBtn, ...s.closeBtn }} onClick={onClose}>
-            <span style={s.btnIcon}>✕</span>
-          </button>
         </div>
+
+        {/* Title text (centered) */}
+        <span style={s.titleText}>{windowState.title}</span>
+
+        {/* Spacer for centering */}
+        <div style={{ width: isMobile ? 56 : 60 }} />
       </div>
-      <div style={s.menuBar}>
-        <span style={s.menuItem}>File</span>
-        <span style={s.menuItem}>Edit</span>
-        <span style={s.menuItem}>View</span>
-        <span style={s.menuItem}>Help</span>
-      </div>
+
+      {/* Content */}
       <div style={s.content}>
         {children}
       </div>
-    </div>
+    </motion.div>
   )
 }
 
 const s: Record<string, React.CSSProperties> = {
   window: {
     position: 'absolute',
-    backgroundColor: '#c0c0c0',
-    border: '2px outset #dfdfdf',
+    backgroundColor: theme.colors.windowBg,
+    border: `1px solid ${theme.colors.windowBorder}`,
+    borderRadius: theme.radius.window,
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: '4px 4px 10px rgba(0,0,0,0.4)',
+    boxShadow: theme.shadow.window,
+    backdropFilter: theme.blur.window,
+    WebkitBackdropFilter: theme.blur.window,
+    overflow: 'hidden',
   },
   titleBar: {
-    height: isMobile ? 36 : 22,
-    background: 'linear-gradient(90deg, #000080 0%, #1084d0 100%)',
+    height: isMobile ? 44 : 36,
+    backgroundColor: theme.colors.titleBarBg,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: isMobile ? '0 6px' : '0 3px',
+    padding: isMobile ? '0 14px' : '0 12px',
     cursor: 'move',
     userSelect: 'none',
+    borderBottom: `1px solid rgba(255,255,255,0.05)`,
+    flexShrink: 0,
   },
-  titleLeft: {
+  trafficLights: {
     display: 'flex',
     alignItems: 'center',
-    gap: 4,
-    overflow: 'hidden',
+    gap: 8,
   },
-  titleText: {
-    color: '#fff',
-    fontSize: isMobile ? 14 : 12,
-    fontFamily: 'monospace',
-    fontWeight: 'bold',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  },
-  titleButtons: {
-    display: 'flex',
-    gap: isMobile ? 4 : 2,
-  },
-  winBtn: {
-    width: isMobile ? 44 : 18,
-    height: isMobile ? 34 : 16,
-    border: '2px outset #dfdfdf',
-    backgroundColor: '#c0c0c0',
+  trafficBtn: {
+    width: 12,
+    height: 12,
+    borderRadius: '50%',
+    border: 'none',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 0,
+    transition: 'filter 0.15s ease',
   },
-  closeBtn: {},
-  btnIcon: {
-    fontSize: isMobile ? 14 : 10,
+  trafficIcon: {
+    fontSize: 8,
     lineHeight: 1,
+    color: 'rgba(0, 0, 0, 0.5)',
     fontWeight: 'bold',
   },
-  menuBar: {
-    height: isMobile ? 28 : 20,
-    borderBottom: '1px solid #808080',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 0,
-    padding: '0 4px',
-  },
-  menuItem: {
-    fontSize: isMobile ? 13 : 11,
-    fontFamily: 'monospace',
-    padding: isMobile ? '4px 10px' : '2px 8px',
-    cursor: 'pointer',
-    color: '#000',
+  titleText: {
+    color: theme.colors.titleBarText,
+    fontSize: isMobile ? 13 : 12,
+    fontFamily: theme.fonts.system,
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    position: 'absolute',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    pointerEvents: 'none',
   },
   content: {
     flex: 1,
     overflow: 'auto',
-    backgroundColor: '#fff',
-    border: '2px inset #808080',
-    margin: 2,
+    backgroundColor: theme.colors.contentBg,
   },
 }

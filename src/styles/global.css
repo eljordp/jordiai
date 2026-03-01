@@ -7,7 +7,7 @@
 html, body {
   overflow: hidden;
   background-color: #000;
-  font-family: monospace;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   width: 100%;
   height: 100%;
 }
@@ -25,11 +25,36 @@ html, body {
 }
 
 h1, h2, h3, h4, h5, p {
-  font-family: monospace;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   font-weight: 400;
   font-style: normal;
   color: white;
   font-size: 16px;
+}
+
+/* Custom dark scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Input focus styles */
+input:focus, textarea:focus {
+  border-color: #0a84ff !important;
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
 }
 
 .jitter {
@@ -88,9 +113,4 @@ h1, h2, h3, h4, h5, p {
 @keyframes fade-pulse {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.8; }
-}
-
-/* BIOS hover button text fix */
-.bios-start-button:hover span {
-  color: #000;
 }

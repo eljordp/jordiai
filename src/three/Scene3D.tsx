@@ -1,6 +1,11 @@
 import { useEffect, useRef, useCallback } from 'react'
 import * as THREE from 'three'
 import TWEEN from '@tweenjs/tween.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 
 interface Props {
   cameraMode: 'idle' | 'desk' | 'monitor'
@@ -11,32 +16,32 @@ interface Props {
 
 const KEYFRAMES = {
   idle: {
-    position: { x: 550, y: 420, z: 650 },
-    lookAt: { x: 0, y: 180, z: -50 },
+    position: { x: 500, y: 380, z: 600 },
+    lookAt: { x: 0, y: 160, z: -50 },
   },
   desk: {
-    position: { x: 60, y: 320, z: 380 },
-    lookAt: { x: 0, y: 240, z: -60 },
+    position: { x: 50, y: 300, z: 350 },
+    lookAt: { x: 0, y: 220, z: -60 },
   },
   monitor: {
-    position: { x: 0, y: 280, z: 140 },
-    lookAt: { x: 0, y: 268, z: -55 },
+    position: { x: 0, y: 270, z: 130 },
+    lookAt: { x: 0, y: 258, z: -55 },
   },
 }
+
+const isMobile = window.innerWidth < 768
+const usePostProcessing = !isMobile && window.devicePixelRatio <= 2
 
 export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside, onEnterMonitor }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
-  const lookAtTarget = useRef(new THREE.Vector3(0, 180, -50))
+  const lookAtTarget = useRef(new THREE.Vector3(0, 160, -50))
   const screenRef = useRef<THREE.Mesh | null>(null)
   const frameRef = useRef<number>(0)
   const mousePos = useRef({ x: 0, y: 0 })
   const cameraModeRef = useRef(cameraMode)
   const monitorGlowRef = useRef<THREE.PointLight | null>(null)
-  const scanLineMeshRef = useRef<THREE.Mesh | null>(null)
   const lampOnRef = useRef(true)
-  const lampGroupRef = useRef<THREE.Group | null>(null)
 
   cameraModeRef.current = cameraMode
 
@@ -69,7 +74,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
 
     // ── Camera ──
     const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, 5000)
-    camera.position.set(550, 420, 650)
+    camera.position.set(500, 380, 600)
     cameraRef.current = camera
 
     // ── Renderer ──
@@ -79,14 +84,27 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.8
+    renderer.toneMappingExposure = 1.6
     containerRef.current.appendChild(renderer.domElement)
-    rendererRef.current = renderer
+
+    // ── Post-Processing ──
+    let composer: EffectComposer | null = null
+    if (usePostProcessing) {
+      composer = new EffectComposer(renderer)
+      composer.addPass(new RenderPass(scene, camera))
+      const bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        0.25,  // strength
+        0.4,   // radius
+        0.88   // threshold
+      )
+      composer.addPass(bloomPass)
+      composer.addPass(new OutputPass())
+    }
 
     // ── Materials ──
-    const darkWood = new THREE.MeshStandardMaterial({ color: 0x4a3020, roughness: 0.7, metalness: 0.05 })
-    const lightWood = new THREE.MeshStandardMaterial({ color: 0x6d4c3a, roughness: 0.65, metalness: 0.05 })
-    const darkMetal = new THREE.MeshStandardMaterial({ color: 0x2a2a30, roughness: 0.25, metalness: 0.85 })
+    const deskMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3, metalness: 0.05 })
+    const legMat = new THREE.MeshStandardMaterial({ color: 0xc0c0c0, roughness: 0.2, metalness: 0.7 })
     const chrome = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.15, metalness: 0.95 })
     const wallMat = new THREE.MeshStandardMaterial({ color: 0x778899, roughness: 0.95, metalness: 0.0 })
     const floorMat = new THREE.MeshStandardMaterial({ color: 0x554840, roughness: 0.85, metalness: 0.05 })
@@ -95,47 +113,46 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     const blackPlastic = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.3 })
 
     // ── Lighting ──
-    // Light mode: bright room
-    const ambient = new THREE.AmbientLight(0xffffff, 1.5)
+    const ambient = new THREE.AmbientLight(0xfff5ee, 1.4)
     scene.add(ambient)
 
-    const hemi = new THREE.HemisphereLight(0xddeeff, 0x8B7355, 1.2)
+    const hemi = new THREE.HemisphereLight(0xddeeff, 0x8B7355, 1.0)
     scene.add(hemi)
 
-    // Desk lamp (warm) — the main togglable light
-    const deskLamp = new THREE.PointLight(0xffcc88, 200000, 1200, 2)
+    // Desk lamp (warm)
+    const deskLamp = new THREE.PointLight(0xffcc88, 180000, 1200, 2)
     deskLamp.position.set(-200, 420, 60)
     deskLamp.castShadow = true
     deskLamp.shadow.mapSize.set(1024, 1024)
     deskLamp.shadow.radius = 4
     scene.add(deskLamp)
 
-    // Monitor glow (teal/blue)
-    const monitorGlow = new THREE.PointLight(0x66ccdd, 60000, 600, 2)
+    // Monitor glow (cool white-blue)
+    const monitorGlow = new THREE.PointLight(0x88bbdd, 50000, 600, 2)
     monitorGlow.position.set(0, 300, 20)
     scene.add(monitorGlow)
     monitorGlowRef.current = monitorGlow
 
-    // Rim light (purple accent)
-    const rimLight = new THREE.SpotLight(0x8855cc, 80000, 1500, Math.PI / 6, 0.5, 2)
+    // Warm rim light (replaced purple)
+    const rimLight = new THREE.SpotLight(0xffaa66, 60000, 1500, Math.PI / 6, 0.5, 2)
     rimLight.position.set(400, 600, -300)
     rimLight.target.position.set(0, 200, 0)
     scene.add(rimLight)
     scene.add(rimLight.target)
 
     // Fill light
-    const fillLight = new THREE.PointLight(0x88aacc, 40000, 1200, 2)
+    const fillLight = new THREE.PointLight(0x88aacc, 35000, 1200, 2)
     fillLight.position.set(-300, 50, 300)
     scene.add(fillLight)
 
-    // Overhead room light
-    const ceilingLight = new THREE.PointLight(0xffeedd, 300000, 1500, 2)
+    // Ceiling light
+    const ceilingLight = new THREE.PointLight(0xffeedd, 280000, 1500, 2)
     ceilingLight.position.set(0, 900, 100)
     ceilingLight.castShadow = true
     scene.add(ceilingLight)
 
     // Window daylight
-    const dayLight = new THREE.DirectionalLight(0xffffff, 2.0)
+    const dayLight = new THREE.DirectionalLight(0xffffff, 1.8)
     dayLight.position.set(-500, 800, 200)
     dayLight.castShadow = true
     scene.add(dayLight)
@@ -147,43 +164,37 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     const setLightMode = (on: boolean) => {
       lampIsOn = on
       lampOnRef.current = on
-      // Light mode = lamp on = bright room
-      ambient.intensity = on ? 1.5 : 0.15
-      hemi.intensity = on ? 1.2 : 0.2
-      deskLamp.intensity = on ? 200000 : 80000
-      ceilingLight.intensity = on ? 300000 : 0
-      dayLight.intensity = on ? 2.0 : 0.0
-      fillLight.intensity = on ? 40000 : 10000
-      rimLight.intensity = on ? 80000 : 40000
+      ambient.intensity = on ? 1.4 : 0.12
+      hemi.intensity = on ? 1.0 : 0.15
+      deskLamp.intensity = on ? 180000 : 70000
+      ceilingLight.intensity = on ? 280000 : 0
+      dayLight.intensity = on ? 1.8 : 0.0
+      fillLight.intensity = on ? 35000 : 8000
+      rimLight.intensity = on ? 60000 : 30000
       scene.background = new THREE.Color(on ? 0x8899aa : 0x050508)
     }
 
     // ── Room ──
-    // Floor
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), floorMat)
     floor.rotation.x = -Math.PI / 2
     floor.receiveShadow = true
     scene.add(floor)
 
-    // Back wall
     const backWall = new THREE.Mesh(new THREE.PlaneGeometry(2000, 1000), wallMat)
     backWall.position.set(0, 500, -350)
     backWall.receiveShadow = true
     scene.add(backWall)
 
-    // Left wall
     const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(2000, 1000), wallMat)
     leftWall.position.set(-600, 500, 0)
     leftWall.rotation.y = Math.PI / 2
     scene.add(leftWall)
 
-    // Right wall
     const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(2000, 1000), wallMat)
     rightWall.position.set(600, 500, 0)
     rightWall.rotation.y = -Math.PI / 2
     scene.add(rightWall)
 
-    // Ceiling
     const ceiling = new THREE.Mesh(
       new THREE.PlaneGeometry(2000, 2000),
       new THREE.MeshStandardMaterial({ color: 0x0e0e14, roughness: 0.95 })
@@ -192,343 +203,290 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     ceiling.position.y = 1000
     scene.add(ceiling)
 
-    // ── Desk ──
-    // Desktop surface
-    const deskTop = new THREE.Mesh(new THREE.BoxGeometry(520, 14, 260), darkWood)
-    deskTop.position.set(0, 162, -10)
+    // ── Desk (clean, minimal, white) ──
+    const deskTop = new THREE.Mesh(new THREE.BoxGeometry(520, 10, 260), deskMat)
+    deskTop.position.set(0, 165, -10)
     deskTop.castShadow = true
     deskTop.receiveShadow = true
     scene.add(deskTop)
 
-    // Desk front panel
-    const deskFront = new THREE.Mesh(new THREE.BoxGeometry(520, 140, 8), lightWood)
-    deskFront.position.set(0, 82, 120)
-    scene.add(deskFront)
-
-    // Desk side panels
-    ;[[-256, 82, -10], [256, 82, -10]].forEach(([x, y, z]) => {
-      const side = new THREE.Mesh(new THREE.BoxGeometry(8, 140, 260), lightWood)
-      side.position.set(x, y, z)
-      side.castShadow = true
-      scene.add(side)
+    // Desk legs
+    const legGeo = new THREE.BoxGeometry(6, 160, 6)
+    ;[[-240, 82, 110], [-240, 82, -130], [240, 82, 110], [240, 82, -130]].forEach(([x, y, z]) => {
+      const leg = new THREE.Mesh(legGeo, legMat)
+      leg.position.set(x, y, z)
+      leg.castShadow = true
+      scene.add(leg)
     })
 
-    // Desk back panel
-    const deskBack = new THREE.Mesh(new THREE.BoxGeometry(520, 60, 8), lightWood)
-    deskBack.position.set(0, 50, -136)
-    scene.add(deskBack)
+    // ── GLTF Model Loader ──
+    const loader = new GLTFLoader()
+    let macbookScreenMesh: THREE.Mesh | null = null
 
-    // Desk drawer (right side)
-    const drawer = new THREE.Mesh(new THREE.BoxGeometry(160, 100, 240), lightWood)
-    drawer.position.set(170, 62, -10)
-    scene.add(drawer)
-    // Drawer handle
-    const handle = new THREE.Mesh(new THREE.BoxGeometry(40, 4, 4), chrome)
-    handle.position.set(170, 90, 112)
-    scene.add(handle)
-
-    // ── Monitor ──
-    // Monitor body (thicker bezel)
-    const monitorGroup = new THREE.Group()
-    monitorGroup.position.set(0, 0, -55)
-    scene.add(monitorGroup)
-
-    // Back casing
-    const monitorBack = new THREE.Mesh(new THREE.BoxGeometry(290, 180, 20), darkMetal)
-    monitorBack.position.set(0, 310, 0)
-    monitorBack.castShadow = true
-    monitorGroup.add(monitorBack)
-
-    // Bezel frame (slightly larger, dark)
-    const bezelMat = new THREE.MeshStandardMaterial({ color: 0x111115, roughness: 0.3, metalness: 0.7 })
-    // Top bezel
-    const bezelTop = new THREE.Mesh(new THREE.BoxGeometry(292, 12, 3), bezelMat)
-    bezelTop.position.set(0, 396, 12)
-    monitorGroup.add(bezelTop)
-    // Bottom bezel
-    const bezelBot = new THREE.Mesh(new THREE.BoxGeometry(292, 16, 3), bezelMat)
-    bezelBot.position.set(0, 216, 12)
-    monitorGroup.add(bezelBot)
-    // Left bezel
-    const bezelL = new THREE.Mesh(new THREE.BoxGeometry(10, 180, 3), bezelMat)
-    bezelL.position.set(-141, 310, 12)
-    monitorGroup.add(bezelL)
-    // Right bezel
-    const bezelR = new THREE.Mesh(new THREE.BoxGeometry(10, 180, 3), bezelMat)
-    bezelR.position.set(141, 310, 12)
-    monitorGroup.add(bezelR)
-
-    // Screen with OS preview texture
-    const screenGeo = new THREE.PlaneGeometry(270, 164)
-
-    // Draw OS preview on a canvas
+    // Draw macOS-style preview on a canvas for the MacBook screen
     const previewCanvas = document.createElement('canvas')
     previewCanvas.width = 1024
     previewCanvas.height = 640
     const ctx = previewCanvas.getContext('2d')!
 
-    // Desktop background
+    // Dark gradient desktop background
     const bgGrad = ctx.createLinearGradient(0, 0, 1024, 640)
-    bgGrad.addColorStop(0, '#0d1b2a')
-    bgGrad.addColorStop(0.5, '#1b2838')
-    bgGrad.addColorStop(1, '#0d1b2a')
+    bgGrad.addColorStop(0, '#1a1a2e')
+    bgGrad.addColorStop(0.4, '#16213e')
+    bgGrad.addColorStop(1, '#0f3460')
     ctx.fillStyle = bgGrad
     ctx.fillRect(0, 0, 1024, 640)
 
-    // Desktop icons
-    const iconData = [
-      { label: 'Showcase', y: 30 },
-      { label: 'About Me', y: 110 },
-      { label: 'Projects', y: 190 },
-      { label: 'Contact', y: 270 },
-    ]
-    iconData.forEach(({ label, y }) => {
-      ctx.fillStyle = 'rgba(200,200,200,0.15)'
-      ctx.fillRect(16, y, 56, 50)
-      ctx.strokeStyle = 'rgba(200,200,200,0.3)'
-      ctx.strokeRect(16, y, 56, 50)
-      ctx.fillStyle = '#fff'
-      ctx.font = '11px monospace'
-      ctx.textAlign = 'center'
-      ctx.fillText(label, 44, y + 68)
-    })
-
-    // Window
-    const wx = 100, wy = 16, ww = 680, wh = 540
+    // macOS-style window (dark, rounded)
+    const wx = 80, wy = 24, ww = 700, wh = 520
     // Window shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.3)'
-    ctx.fillRect(wx + 4, wy + 4, ww, wh)
+    ctx.fillStyle = 'rgba(0,0,0,0.4)'
+    ctx.beginPath()
+    ctx.roundRect(wx + 6, wy + 6, ww, wh, 12)
+    ctx.fill()
     // Window body
-    ctx.fillStyle = '#c0c0c0'
-    ctx.fillRect(wx, wy, ww, wh)
+    ctx.fillStyle = 'rgba(30, 30, 30, 0.95)'
+    ctx.beginPath()
+    ctx.roundRect(wx, wy, ww, wh, 12)
+    ctx.fill()
+    // Window border
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.roundRect(wx, wy, ww, wh, 12)
+    ctx.stroke()
     // Title bar
-    const titleGrad = ctx.createLinearGradient(wx, wy, wx + ww, wy)
-    titleGrad.addColorStop(0, '#000080')
-    titleGrad.addColorStop(1, '#1084d0')
-    ctx.fillStyle = titleGrad
-    ctx.fillRect(wx, wy, ww, 24)
-    ctx.fillStyle = '#fff'
-    ctx.font = 'bold 13px monospace'
+    ctx.fillStyle = 'rgba(50, 50, 50, 0.95)'
+    ctx.beginPath()
+    ctx.roundRect(wx, wy, ww, 36, [12, 12, 0, 0])
+    ctx.fill()
+    // Traffic lights
+    const tlY = wy + 14
+    ctx.fillStyle = '#ff5f57'
+    ctx.beginPath(); ctx.arc(wx + 20, tlY, 6, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = '#febc2e'
+    ctx.beginPath(); ctx.arc(wx + 40, tlY, 6, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = '#28c840'
+    ctx.beginPath(); ctx.arc(wx + 60, tlY, 6, 0, Math.PI * 2); ctx.fill()
+    // Title text
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'
+    ctx.font = '12px -apple-system, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('Jordi - Showcase 2025', wx + ww / 2, wy + 23)
     ctx.textAlign = 'left'
-    ctx.fillText('Jordi - Showcase 2025', wx + 8, wy + 17)
-    // Title buttons
-    ctx.fillStyle = '#c0c0c0'
-    ;[ww - 20, ww - 40, ww - 60].forEach(bx => {
-      ctx.fillRect(wx + bx, wy + 4, 16, 16)
-      ctx.strokeStyle = '#808080'
-      ctx.strokeRect(wx + bx, wy + 4, 16, 16)
-    })
-    // Menu bar
-    ctx.fillStyle = '#c0c0c0'
-    ctx.fillRect(wx, wy + 24, ww, 20)
-    ctx.fillStyle = '#000'
-    ctx.font = '11px monospace'
-    ctx.fillText('File   Edit   View   Help', wx + 8, wy + 38)
     // Content area
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(wx + 4, wy + 48, ww - 8, wh - 80)
+    ctx.fillStyle = 'rgba(20,20,20,0.95)'
+    ctx.fillRect(wx + 1, wy + 36, ww - 2, wh - 37)
     // Content text
-    ctx.fillStyle = '#000'
-    ctx.font = 'bold 36px monospace'
-    ctx.fillText('Jordi', wx + 28, wy + 105)
-    ctx.font = '14px monospace'
-    ctx.fillStyle = '#444'
-    ctx.fillText('AI Engineer & Software Developer', wx + 28, wy + 130)
+    ctx.fillStyle = '#f5f5f7'
+    ctx.font = 'bold 32px -apple-system, sans-serif'
+    ctx.fillText('Jordi', wx + 30, wy + 90)
+    ctx.font = '13px -apple-system, sans-serif'
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'
+    ctx.fillText('AI Engineer & Software Developer', wx + 30, wy + 115)
     // Separator
-    ctx.fillStyle = '#000080'
-    ctx.fillRect(wx + 28, wy + 145, 200, 3)
+    ctx.fillStyle = '#0a84ff'
+    ctx.fillRect(wx + 30, wy + 128, 160, 2)
     // Bio text
-    ctx.fillStyle = '#333'
-    ctx.font = '12px monospace'
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'
+    ctx.font = '11px -apple-system, sans-serif'
     const bioLines = [
-      "I'm an AI Engineer passionate about building",
-      'innovative digital experiences. I specialize in',
-      'building websites, crafting software solutions,',
-      'and developing AI automations.',
+      "Started from nothing — now building AI-powered systems",
+      'and working with companies doing billions in revenue.',
+      'I specialize in websites, software, and AI automations.',
     ]
     bioLines.forEach((line, i) => {
-      ctx.fillText(line, wx + 28, wy + 175 + i * 18)
+      ctx.fillText(line, wx + 30, wy + 155 + i * 18)
     })
-    // Section
-    ctx.fillStyle = '#000'
-    ctx.font = 'bold 16px monospace'
-    ctx.fillText('PROJECTS', wx + 28, wy + 270)
-    ctx.fillStyle = '#000080'
-    ctx.fillRect(wx + 28, wy + 278, 120, 2)
-    // Category cards
+    // Section header
+    ctx.fillStyle = '#f5f5f7'
+    ctx.font = '600 12px -apple-system, sans-serif'
+    ctx.fillText('PROJECTS', wx + 30, wy + 230)
+    ctx.fillStyle = 'rgba(255,255,255,0.08)'
+    ctx.fillRect(wx + 30, wy + 238, ww - 60, 1)
+    // Project cards
     const cards = [
-      { title: 'Websites', desc: 'Web design & dev', x: wx + 28 },
-      { title: 'Software', desc: 'Custom apps & tools', x: wx + 250 },
-      { title: 'Contact', desc: 'Get in touch', x: wx + 472 },
+      { title: 'Websites', desc: 'Web design & dev', color: '#0a84ff' },
+      { title: 'Software', desc: 'Custom apps & tools', color: '#bf5af2' },
+      { title: 'Contact', desc: 'Get in touch', color: '#ff9f0a' },
     ]
-    cards.forEach(({ title, desc, x }) => {
-      ctx.fillStyle = '#f0f0f0'
-      ctx.fillRect(x, wy + 295, 190, 70)
-      ctx.strokeStyle = '#d0d0d0'
-      ctx.strokeRect(x, wy + 295, 190, 70)
-      ctx.fillStyle = '#000080'
-      ctx.font = 'bold 13px monospace'
-      ctx.fillText(title, x + 12, wy + 320)
-      ctx.fillStyle = '#555'
-      ctx.font = '11px monospace'
-      ctx.fillText(desc, x + 12, wy + 340)
+    cards.forEach(({ title, desc, color }, i) => {
+      const cx = wx + 30 + i * 215
+      ctx.fillStyle = 'rgba(255,255,255,0.06)'
+      ctx.beginPath()
+      ctx.roundRect(cx, wy + 255, 195, 65, 8)
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)'
+      ctx.beginPath()
+      ctx.roundRect(cx, wy + 255, 195, 65, 8)
+      ctx.stroke()
+      ctx.fillStyle = color
+      ctx.font = '600 12px -apple-system, sans-serif'
+      ctx.fillText(title, cx + 14, wy + 280)
+      ctx.fillStyle = 'rgba(255,255,255,0.35)'
+      ctx.font = '11px -apple-system, sans-serif'
+      ctx.fillText(desc, cx + 14, wy + 298)
     })
-    // Bottom links
-    ctx.fillStyle = '#000080'
-    ctx.font = '12px monospace'
-    ctx.textAlign = 'center'
-    ctx.fillText('About  |  Projects  |  Contact', wx + ww / 2, wy + wh - 60)
-    ctx.textAlign = 'left'
 
-    // Taskbar
-    ctx.fillStyle = '#c0c0c0'
-    ctx.fillRect(0, 608, 1024, 32)
-    ctx.strokeStyle = '#fff'
-    ctx.lineWidth = 1
-    ctx.strokeRect(0, 608, 1024, 1)
-    // Start button
-    ctx.fillStyle = '#c0c0c0'
-    ctx.fillRect(4, 612, 64, 24)
-    ctx.strokeStyle = '#dfdfdf'
-    ctx.strokeRect(4, 612, 64, 24)
-    ctx.fillStyle = '#000'
-    ctx.font = 'bold 12px monospace'
-    ctx.fillText('Start', 18, 628)
-    // Taskbar item
-    ctx.fillStyle = '#a0a0a0'
-    ctx.fillRect(76, 612, 140, 24)
-    ctx.fillStyle = '#000'
-    ctx.font = '11px monospace'
-    ctx.fillText('Showcase', 84, 628)
-    // Clock
-    ctx.fillStyle = '#c0c0c0'
-    ctx.fillRect(924, 612, 96, 24)
-    ctx.strokeStyle = '#808080'
-    ctx.strokeRect(924, 612, 96, 24)
-    ctx.fillStyle = '#000'
-    ctx.font = '12px monospace'
-    ctx.textAlign = 'right'
-    const now = new Date()
-    ctx.fillText(now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }), 1012, 628)
+    // Dock at bottom
+    const dockW = 240, dockH = 40
+    const dockX = (1024 - dockW) / 2, dockY = 590
+    ctx.fillStyle = 'rgba(40,40,40,0.75)'
+    ctx.beginPath()
+    ctx.roundRect(dockX, dockY, dockW, dockH, 14)
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)'
+    ctx.beginPath()
+    ctx.roundRect(dockX, dockY, dockW, dockH, 14)
+    ctx.stroke()
+    // Dock icons
+    const dockColors = ['#0a84ff', '#30d158', '#bf5af2', '#ff9f0a']
+    const dockLabels = ['S', 'A', 'P', 'C']
+    dockColors.forEach((color, i) => {
+      const ix = dockX + 28 + i * 50
+      ctx.fillStyle = color
+      ctx.beginPath()
+      ctx.roundRect(ix, dockY + 8, 24, 24, 6)
+      ctx.fill()
+      ctx.fillStyle = '#fff'
+      ctx.font = 'bold 12px -apple-system, sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText(dockLabels[i], ix + 12, dockY + 25)
+    })
     ctx.textAlign = 'left'
 
     const previewTexture = new THREE.CanvasTexture(previewCanvas)
 
-    const screenMat = new THREE.MeshStandardMaterial({
-      map: previewTexture,
-      emissive: 0x444444,
-      emissiveIntensity: 0.8,
-      roughness: 0.05,
-      metalness: 0.1,
+    // Load MacBook
+    loader.load('/models/macbook/scene.gltf', (gltf) => {
+      const model = gltf.scene
+      model.scale.set(1.8, 1.8, 1.8)
+      model.position.set(0, 170, -55)
+      model.rotation.y = 0
+
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true
+          child.receiveShadow = true
+
+          // Find the screen mesh (material with full emissive = sfCQkHOWyrsLmor)
+          const mat = child.material as THREE.MeshStandardMaterial
+          if (mat && mat.emissiveIntensity > 0.5) {
+            macbookScreenMesh = child
+            screenRef.current = child
+
+            // Apply OS preview texture to the screen
+            const screenMaterial = new THREE.MeshStandardMaterial({
+              map: previewTexture,
+              emissive: new THREE.Color(0x444444),
+              emissiveIntensity: 0.6,
+              roughness: 0.05,
+              metalness: 0.1,
+            })
+            child.material = screenMaterial
+          }
+        }
+      })
+
+      scene.add(model)
     })
-    const screen = new THREE.Mesh(screenGeo, screenMat)
-    screen.position.set(0, 310, 12)
-    screenRef.current = screen
-    monitorGroup.add(screen)
 
-    // Scan lines overlay
-    const scanCanvas = document.createElement('canvas')
-    scanCanvas.width = 1
-    scanCanvas.height = 512
-    const scanCtx = scanCanvas.getContext('2d')!
-    for (let i = 0; i < 512; i++) {
-      scanCtx.fillStyle = i % 3 === 0 ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0)'
-      scanCtx.fillRect(0, i, 1, 1)
-    }
-    const scanTexture = new THREE.CanvasTexture(scanCanvas)
-    scanTexture.wrapS = THREE.RepeatWrapping
-    scanTexture.wrapT = THREE.RepeatWrapping
-    scanTexture.repeat.set(1, 30)
-    const scanMat = new THREE.MeshBasicMaterial({ map: scanTexture, transparent: true, opacity: 0.3, depthWrite: false })
-    const scanMesh = new THREE.Mesh(new THREE.PlaneGeometry(270, 164), scanMat)
-    scanMesh.position.set(0, 310, 12.5)
-    scanLineMeshRef.current = scanMesh
-    monitorGroup.add(scanMesh)
+    // Load AirPods (desk accessory)
+    loader.load('/models/airpods/scene.gltf', (gltf) => {
+      const model = gltf.scene
+      model.scale.set(120, 120, 120)
+      model.position.set(180, 170, 80)
+      model.rotation.y = -0.4
 
-    // Screen reflection (subtle)
-    const reflectionMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.02,
-      depthWrite: false,
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true
+          child.receiveShadow = true
+        }
+      })
+
+      scene.add(model)
     })
-    const reflection = new THREE.Mesh(new THREE.PlaneGeometry(270, 164), reflectionMat)
-    reflection.position.set(0, 310, 13)
-    monitorGroup.add(reflection)
 
-    // Monitor stand
-    const standNeck = new THREE.Mesh(new THREE.BoxGeometry(12, 55, 12), darkMetal)
-    standNeck.position.set(0, 192, 0)
-    monitorGroup.add(standNeck)
+    // Load iPhone (desk accessory)
+    loader.load('/models/iphone/scene.gltf', (gltf) => {
+      const model = gltf.scene
+      model.scale.set(80, 80, 80)
+      model.position.set(-160, 170, 80)
+      model.rotation.x = -Math.PI / 2
+      model.rotation.z = 0.3
 
-    const standBase = new THREE.Mesh(new THREE.CylinderGeometry(40, 45, 6, 24), darkMetal)
-    standBase.position.set(0, 171, 0)
-    monitorGroup.add(standBase)
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true
+          child.receiveShadow = true
+        }
+      })
 
-    // ── Keyboard ──
+      scene.add(model)
+    })
+
+    // ── Keyboard (Apple Magic Keyboard style) ──
     const kbGroup = new THREE.Group()
-    kbGroup.position.set(-10, 170, 50)
-    kbGroup.rotation.x = -0.05
+    kbGroup.position.set(-10, 170, 55)
+    kbGroup.rotation.x = -0.03
     scene.add(kbGroup)
 
-    const kbBase = new THREE.Mesh(new THREE.BoxGeometry(160, 5, 55), blackPlastic)
+    const kbMat = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.35, metalness: 0.1 })
+    const kbBase = new THREE.Mesh(new THREE.BoxGeometry(150, 3, 50), kbMat)
     kbBase.receiveShadow = true
     kbGroup.add(kbBase)
 
-    // Keyboard keys (grid pattern)
-    const keyMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.6, metalness: 0.3 })
+    const keyMat = new THREE.MeshStandardMaterial({ color: 0xdadada, roughness: 0.5, metalness: 0.05 })
     for (let row = 0; row < 5; row++) {
       for (let col = 0; col < 14; col++) {
-        const key = new THREE.Mesh(new THREE.BoxGeometry(9, 3, 8), keyMat)
-        key.position.set(-65 + col * 10.5, 4, -18 + row * 10.5)
+        const key = new THREE.Mesh(new THREE.BoxGeometry(8.5, 2, 7.5), keyMat)
+        key.position.set(-60 + col * 10, 2.5, -16 + row * 9.5)
         kbGroup.add(key)
       }
     }
-    // Spacebar
-    const spacebar = new THREE.Mesh(new THREE.BoxGeometry(55, 3, 8), keyMat)
-    spacebar.position.set(-5, 4, 24)
+    const spacebar = new THREE.Mesh(new THREE.BoxGeometry(50, 2, 7.5), keyMat)
+    spacebar.position.set(-5, 2.5, 22)
     kbGroup.add(spacebar)
 
-    // ── Mouse ──
+    // ── Mouse (Magic Mouse style) ──
     const mouseGroup = new THREE.Group()
-    mouseGroup.position.set(120, 170, 55)
+    mouseGroup.position.set(110, 170, 60)
     scene.add(mouseGroup)
 
+    const mouseMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.25, metalness: 0.1 })
     const mouseBody = new THREE.Mesh(
-      new THREE.CapsuleGeometry(8, 14, 8, 12),
-      darkMetal
+      new THREE.CapsuleGeometry(7, 12, 8, 12),
+      mouseMat
     )
     mouseBody.rotation.x = Math.PI / 2
     mouseBody.rotation.z = Math.PI
+    mouseBody.scale.y = 0.5
     mouseBody.castShadow = true
     mouseGroup.add(mouseBody)
 
-    // Mouse pad
-    const pad = new THREE.Mesh(
-      new THREE.BoxGeometry(80, 1, 80),
-      new THREE.MeshStandardMaterial({ color: 0x111118, roughness: 0.85 })
+    // Light grey desk mat
+    const deskMatPad = new THREE.Mesh(
+      new THREE.BoxGeometry(160, 1, 80),
+      new THREE.MeshStandardMaterial({ color: 0x444450, roughness: 0.85 })
     )
-    pad.position.set(0, -2, 0)
-    mouseGroup.add(pad)
+    deskMatPad.position.set(50, 169, 60)
+    scene.add(deskMatPad)
 
-    // ── Desk Lamp (clickable — toggles light/dark) ──
+    // ── Desk Lamp ──
     const lampGroup = new THREE.Group()
     lampGroup.position.set(-210, 170, 50)
     scene.add(lampGroup)
-    lampGroupRef.current = lampGroup
 
-    // Lamp base
     const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(20, 22, 6, 16), chrome)
     lampBase.castShadow = true
     lampGroup.add(lampBase)
 
-    // Lamp arm
     const lampArm = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 200, 8), chrome)
     lampArm.position.set(0, 100, -10)
     lampArm.rotation.z = 0.15
     lampGroup.add(lampArm)
 
-    // Lamp shade
     const lampShade = new THREE.Mesh(
       new THREE.ConeGeometry(28, 35, 16, 1, true),
       new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4, metalness: 0.6, side: THREE.DoubleSide })
@@ -537,7 +495,6 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     lampShade.rotation.z = 0.15
     lampGroup.add(lampShade)
 
-    // Lamp bulb glow
     const bulbMat = new THREE.MeshBasicMaterial({ color: bulbColor.on })
     const bulbGlow = new THREE.Mesh(new THREE.SphereGeometry(6, 8, 8), bulbMat)
     bulbGlow.position.set(15, 200, -10)
@@ -545,7 +502,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
 
     // ── Coffee Mug ──
     const mugGroup = new THREE.Group()
-    mugGroup.position.set(160, 170, 100)
+    mugGroup.position.set(220, 170, 30)
     scene.add(mugGroup)
 
     const mugBody = new THREE.Mesh(
@@ -556,14 +513,12 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     mugBody.castShadow = true
     mugGroup.add(mugBody)
 
-    // Mug handle
     const handleCurve = new THREE.TorusGeometry(7, 2, 8, 12, Math.PI)
     const mugHandle = new THREE.Mesh(handleCurve, whiteMat)
     mugHandle.position.set(12, 16, 0)
     mugHandle.rotation.y = Math.PI / 2
     mugGroup.add(mugHandle)
 
-    // Coffee liquid
     const coffee = new THREE.Mesh(
       new THREE.CircleGeometry(9.5, 16),
       new THREE.MeshStandardMaterial({ color: 0x3a1f0a, roughness: 0.3 })
@@ -585,7 +540,6 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     pot.castShadow = true
     plantGroup.add(pot)
 
-    // Soil
     const soil = new THREE.Mesh(
       new THREE.CircleGeometry(14, 8),
       new THREE.MeshStandardMaterial({ color: 0x2a1a0a, roughness: 0.95 })
@@ -594,7 +548,6 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     soil.position.y = 27
     plantGroup.add(soil)
 
-    // Plant leaves (multiple spheres for organic shape)
     const leafMat = new THREE.MeshStandardMaterial({ color: 0x2d5a27, roughness: 0.85 })
     const leafPositions = [
       [0, 48, 0, 18], [-8, 42, 6, 12], [10, 44, -4, 14],
@@ -607,7 +560,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
       plantGroup.add(leaf)
     })
 
-    // ── Books stack ──
+    // ── Books ──
     const bookColors = [0x8B0000, 0x00008B, 0x006400, 0x4B0082, 0xB8860B]
     bookColors.forEach((color, i) => {
       const book = new THREE.Mesh(
@@ -620,13 +573,13 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
       scene.add(book)
     })
 
-    // ── Shelf on wall ──
+    // ── Shelf ──
+    const darkWood = new THREE.MeshStandardMaterial({ color: 0x4a3020, roughness: 0.7, metalness: 0.05 })
     const shelf = new THREE.Mesh(new THREE.BoxGeometry(200, 8, 30), darkWood)
     shelf.position.set(-250, 450, -340)
     shelf.castShadow = true
     scene.add(shelf)
 
-    // Items on shelf
     const shelfItem1 = new THREE.Mesh(
       new THREE.BoxGeometry(24, 35, 18),
       new THREE.MeshStandardMaterial({ color: 0x333340, roughness: 0.5 })
@@ -648,77 +601,25 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     shelfItem3.position.set(-210, 466, -340)
     scene.add(shelfItem3)
 
-    // ── Second Monitor (smaller, angled) ──
-    const monitor2 = new THREE.Group()
-    monitor2.position.set(-180, 0, -40)
-    monitor2.rotation.y = 0.4
-    scene.add(monitor2)
-
-    const m2Back = new THREE.Mesh(new THREE.BoxGeometry(160, 110, 12), darkMetal)
-    m2Back.position.set(0, 280, 0)
-    monitor2.add(m2Back)
-
-    const m2Screen = new THREE.Mesh(
-      new THREE.PlaneGeometry(148, 98),
-      new THREE.MeshStandardMaterial({ color: 0x0a1515, emissive: 0x061010, emissiveIntensity: 0.3, roughness: 0.1 })
-    )
-    m2Screen.position.set(0, 280, 7)
-    monitor2.add(m2Screen)
-
-    const m2Stand = new THREE.Mesh(new THREE.CylinderGeometry(18, 22, 5, 16), darkMetal)
-    m2Stand.position.set(0, 171, 0)
-    monitor2.add(m2Stand)
-
-    const m2Neck = new THREE.Mesh(new THREE.BoxGeometry(8, 45, 8), darkMetal)
-    m2Neck.position.set(0, 197, 0)
-    monitor2.add(m2Neck)
-
-    // ── Headphones on desk ──
-    const hpGroup = new THREE.Group()
-    hpGroup.position.set(180, 170, 60)
-    scene.add(hpGroup)
-
-    const headband = new THREE.Mesh(
-      new THREE.TorusGeometry(18, 2.5, 8, 24, Math.PI),
-      darkMetal
-    )
-    headband.position.y = 22
-    headband.rotation.z = Math.PI
-    hpGroup.add(headband)
-
-    const earL = new THREE.Mesh(new THREE.CylinderGeometry(10, 10, 8, 12), fabric)
-    earL.position.set(-18, 5, 0)
-    earL.rotation.z = Math.PI / 2
-    hpGroup.add(earL)
-
-    const earR = new THREE.Mesh(new THREE.CylinderGeometry(10, 10, 8, 12), fabric)
-    earR.position.set(18, 5, 0)
-    earR.rotation.z = Math.PI / 2
-    hpGroup.add(earR)
-
-    // ── Chair (behind desk / to side) ──
+    // ── Chair ──
     const chairGroup = new THREE.Group()
     chairGroup.position.set(30, 0, 320)
     chairGroup.rotation.y = -0.3
     scene.add(chairGroup)
 
-    // Chair seat
     const seat = new THREE.Mesh(new THREE.BoxGeometry(80, 10, 70), fabric)
     seat.position.y = 110
     chairGroup.add(seat)
 
-    // Chair back
     const chairBack = new THREE.Mesh(new THREE.BoxGeometry(80, 100, 8), fabric)
     chairBack.position.set(0, 165, -35)
     chairBack.rotation.x = -0.1
     chairGroup.add(chairBack)
 
-    // Chair base
     const chairBase = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 60, 8), chrome)
     chairBase.position.y = 75
     chairGroup.add(chairBase)
 
-    // Chair wheels (5 legs)
     for (let i = 0; i < 5; i++) {
       const angle = (i / 5) * Math.PI * 2
       const legMesh = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 45), chrome)
@@ -731,15 +632,15 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
       chairGroup.add(wheel)
     }
 
-    // ── LED strip under desk ──
+    // ── Subtle LED strip (warm white instead of purple) ──
     const ledStrip = new THREE.Mesh(
       new THREE.BoxGeometry(480, 2, 2),
-      new THREE.MeshBasicMaterial({ color: 0x6633ff })
+      new THREE.MeshBasicMaterial({ color: 0x4488ff })
     )
     ledStrip.position.set(0, 12, 115)
     scene.add(ledStrip)
 
-    const ledLight = new THREE.PointLight(0x6633ff, 5000, 300, 2)
+    const ledLight = new THREE.PointLight(0x4488ff, 3000, 300, 2)
     ledLight.position.set(0, 10, 115)
     scene.add(ledLight)
 
@@ -747,12 +648,10 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     const particleCount = 500
     const particleGeo = new THREE.BufferGeometry()
     const pPositions = new Float32Array(particleCount * 3)
-    const pSizes = new Float32Array(particleCount)
     for (let i = 0; i < particleCount; i++) {
       pPositions[i * 3] = (Math.random() - 0.5) * 1200
       pPositions[i * 3 + 1] = Math.random() * 600 + 50
       pPositions[i * 3 + 2] = (Math.random() - 0.5) * 1200
-      pSizes[i] = Math.random() * 2 + 0.5
     }
     particleGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3))
 
@@ -760,15 +659,14 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
       color: 0x8888cc,
       size: 1.5,
       transparent: true,
-      opacity: 0.25,
+      opacity: 0.2,
       sizeAttenuation: true,
       depthWrite: false,
     })
     const particles = new THREE.Points(particleGeo, particleMat)
     scene.add(particles)
 
-    // ── Small accent lights around room ──
-    // LED on monitor
+    // ── LEDs ──
     const led1 = new THREE.Mesh(
       new THREE.SphereGeometry(2, 8, 8),
       new THREE.MeshBasicMaterial({ color: 0x00ff44 })
@@ -776,7 +674,6 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     led1.position.set(130, 222, -43)
     scene.add(led1)
 
-    // Power LED on PC
     const led2 = new THREE.Mesh(
       new THREE.SphereGeometry(1.5, 8, 8),
       new THREE.MeshBasicMaterial({ color: 0x0088ff })
@@ -793,7 +690,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
       mouseVec.y = -(event.clientY / window.innerHeight) * 2 + 1
       raycaster.setFromCamera(mouseVec, camera)
 
-      // Check lamp click (toggle light/dark)
+      // Lamp toggle
       const lampHits = raycaster.intersectObjects(lampGroup.children, true)
       if (lampHits.length > 0) {
         lampIsOn = !lampIsOn
@@ -802,12 +699,16 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
         return
       }
 
-      const intersects = raycaster.intersectObject(screen)
-      if (intersects.length > 0) {
-        onEnterMonitor()
-      } else {
-        onClickOutside()
+      // MacBook screen click
+      if (macbookScreenMesh) {
+        const screenHits = raycaster.intersectObject(macbookScreenMesh)
+        if (screenHits.length > 0) {
+          onEnterMonitor()
+          return
+        }
       }
+
+      onClickOutside()
     }
     renderer.domElement.addEventListener('click', handleClick)
 
@@ -823,11 +724,14 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
       camera.aspect = window.innerWidth / window.innerHeight
       camera.updateProjectionMatrix()
       renderer.setSize(window.innerWidth, window.innerHeight)
+      if (composer) {
+        composer.setSize(window.innerWidth, window.innerHeight)
+      }
     }
     window.addEventListener('resize', handleResize)
 
-    // Signal loaded
-    setTimeout(() => onResourcesLoaded(), 2000)
+    // Signal loaded (give models time to load)
+    setTimeout(() => onResourcesLoaded(), 3000)
 
     // ── Animate ──
     let time = 0
@@ -836,7 +740,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
       time += 0.016
       TWEEN.update()
 
-      // Mouse parallax — camera follows cursor
+      // Mouse parallax
       const mode = cameraModeRef.current
       if (mode !== 'monitor') {
         const parallaxStrength = mode === 'idle' ? 50 : 35
@@ -846,7 +750,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
         camera.position.y += (targetY - camera.position.y) * 0.12
       }
 
-      // Gentle particle float
+      // Particle float
       const pPos = particleGeo.attributes.position as THREE.BufferAttribute
       for (let i = 0; i < particleCount; i++) {
         pPos.array[i * 3 + 1] += Math.sin(time + i * 0.1) * 0.05
@@ -856,23 +760,20 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
 
       // Monitor glow pulse
       if (monitorGlowRef.current) {
-        const baseGlow = lampIsOn ? 60000 : 40000
-        monitorGlowRef.current.intensity = baseGlow + Math.sin(time * 2) * 3000
-      }
-
-      // Scan line scroll
-      if (scanLineMeshRef.current) {
-        const mat = scanLineMeshRef.current.material as THREE.MeshBasicMaterial
-        if (mat.map) {
-          mat.map.offset.y += 0.002
-        }
+        const baseGlow = lampIsOn ? 50000 : 35000
+        monitorGlowRef.current.intensity = baseGlow + Math.sin(time * 2) * 2000
       }
 
       // LED blink
-      led1.material.opacity = 0.7 + Math.sin(time * 3) * 0.3
+      ;(led1.material as THREE.MeshBasicMaterial).opacity = 0.7 + Math.sin(time * 3) * 0.3
 
       camera.lookAt(lookAtTarget.current)
-      renderer.render(scene, camera)
+
+      if (composer) {
+        composer.render()
+      } else {
+        renderer.render(scene, camera)
+      }
     }
     animate()
 

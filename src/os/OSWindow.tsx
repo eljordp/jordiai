@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import Taskbar from './components/Taskbar'
+import { AnimatePresence } from 'framer-motion'
+import Dock from './components/Dock'
 import Desktop from './components/Desktop'
 import Window from './components/Window'
 import Showcase from './pages/Showcase'
@@ -24,11 +25,8 @@ export type AppKey = 'showcase' | 'about' | 'projects' | 'contact'
 export default function OSWindow() {
   const [windows, setWindows] = useState<WindowState[]>([])
   const [nextZ, setNextZ] = useState(100)
-  const [startMenuOpen, setStartMenuOpen] = useState(false)
 
   const openApp = useCallback((key: AppKey) => {
-    setStartMenuOpen(false)
-
     // Check if already open
     const existing = windows.find(w => w.id === key)
     if (existing) {
@@ -117,32 +115,31 @@ export default function OSWindow() {
 
   return (
     <div style={styles.os}>
-      <Desktop onOpenApp={openApp} />
+      <Desktop />
 
-      {windows.map(w => !w.minimized && (
-        <Window
-          key={w.id}
-          windowState={w}
-          onClose={() => closeWindow(w.id)}
-          onMinimize={() => minimizeWindow(w.id)}
-          onFocus={() => focusWindow(w.id)}
-          onMove={(x, y) => moveWindow(w.id, x, y)}
-        >
-          {w.component}
-        </Window>
-      ))}
+      <AnimatePresence>
+        {windows.map(w => !w.minimized && (
+          <Window
+            key={w.id}
+            windowState={w}
+            onClose={() => closeWindow(w.id)}
+            onMinimize={() => minimizeWindow(w.id)}
+            onFocus={() => focusWindow(w.id)}
+            onMove={(x, y) => moveWindow(w.id, x, y)}
+          >
+            {w.component}
+          </Window>
+        ))}
+      </AnimatePresence>
 
-      <Taskbar
+      <Dock
         windows={windows}
-        startMenuOpen={startMenuOpen}
-        onToggleStart={() => setStartMenuOpen(!startMenuOpen)}
         onOpenApp={openApp}
         onRestoreWindow={(id) => {
           setWindows(prev => prev.map(w =>
             w.id === id ? { ...w, minimized: false, zIndex: nextZ } : w
           ))
           setNextZ(z => z + 1)
-          setStartMenuOpen(false)
         }}
       />
     </div>
@@ -155,6 +152,5 @@ const styles: Record<string, React.CSSProperties> = {
     height: '100%',
     position: 'relative',
     overflow: 'hidden',
-    background: 'linear-gradient(135deg, #0d1b2a 0%, #1b2838 50%, #0d1b2a 100%)',
   },
 }

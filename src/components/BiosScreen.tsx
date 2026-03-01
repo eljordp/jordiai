@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 
 interface Props {
   onStart: () => void
@@ -8,7 +9,6 @@ export default function BiosScreen({ onStart }: Props) {
   const [progress, setProgress] = useState(0)
   const [statusText, setStatusText] = useState('')
   const [showStart, setShowStart] = useState(false)
-  const [hoverStart, setHoverStart] = useState(false)
   const animRef = useRef<number>(0)
 
   const statuses = [
@@ -24,17 +24,15 @@ export default function BiosScreen({ onStart }: Props) {
     let current = 0
     const target = 100
     const startTime = performance.now()
-    const duration = 3000 // 3 seconds total
+    const duration = 3000
 
     const tick = (now: number) => {
       const elapsed = now - startTime
       const t = Math.min(elapsed / duration, 1)
-      // Ease out curve — fast start, slow finish
       current = Math.round(target * (1 - Math.pow(1 - t, 3)))
 
       setProgress(current)
 
-      // Update status text
       for (let i = statuses.length - 1; i >= 0; i--) {
         if (current >= statuses[i].at) {
           setStatusText(statuses[i].text)
@@ -60,15 +58,23 @@ export default function BiosScreen({ onStart }: Props) {
       <div style={styles.vignetteOverlay} />
 
       <div style={styles.content}>
-        {/* Logo / Name */}
-        <div style={styles.logoSection}>
+        <motion.div
+          style={styles.logoSection}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+        >
           <h1 style={styles.name}>JORDI</h1>
           <div style={styles.divider} />
           <p style={styles.tagline}>AI Engineer & Software Developer</p>
-        </div>
+        </motion.div>
 
-        {/* Progress */}
-        <div style={styles.progressSection}>
+        <motion.div
+          style={styles.progressSection}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
+        >
           <div style={styles.progressBar}>
             <div
               style={{
@@ -81,37 +87,38 @@ export default function BiosScreen({ onStart }: Props) {
             <span style={styles.statusText}>{statusText}</span>
             <span style={styles.percentText}>{progress}%</span>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Start button */}
-        <div style={{
-          ...styles.startSection,
-          opacity: showStart ? 1 : 0,
-          transform: showStart ? 'translateY(0)' : 'translateY(10px)',
-          transition: 'all 0.5s ease',
-          pointerEvents: showStart ? 'auto' : 'none',
-        }}>
-          <button
-            style={{
-              ...styles.startButton,
-              ...(hoverStart ? styles.startButtonHover : {}),
-            }}
+        <motion.div
+          style={styles.startSection}
+          initial={{ opacity: 0, y: 10 }}
+          animate={showStart ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+          transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+        >
+          <motion.button
+            style={styles.startButton}
             onClick={onStart}
-            onMouseEnter={() => setHoverStart(true)}
-            onMouseLeave={() => setHoverStart(false)}
+            whileHover={{ backgroundColor: '#fff', borderColor: '#fff' }}
+            whileTap={{ scale: 0.97 }}
           >
-            <span style={{
-              ...styles.startText,
-              ...(hoverStart ? { color: '#000' } : {}),
-            }}>Enter</span>
-          </button>
-        </div>
+            <motion.span
+              style={styles.startText}
+              whileHover={{ color: '#000' }}
+            >
+              Enter
+            </motion.span>
+          </motion.button>
+        </motion.div>
       </div>
 
-      {/* Bottom branding */}
-      <div style={styles.footer}>
+      <motion.div
+        style={styles.footer}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1, duration: 1 }}
+      >
         <span style={styles.footerText}>Jordi Studios &copy; 2025</span>
-      </div>
+      </motion.div>
     </div>
   )
 }
@@ -226,12 +233,8 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid rgba(255,255,255,0.3)',
     cursor: 'pointer',
     padding: '14px 56px',
-    transition: 'all 0.3s ease',
     borderRadius: 0,
-  },
-  startButtonHover: {
-    backgroundColor: '#fff',
-    borderColor: '#fff',
+    transition: 'all 0.3s ease',
   },
   startText: {
     color: '#fff',

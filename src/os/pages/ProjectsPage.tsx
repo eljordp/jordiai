@@ -1,3 +1,9 @@
+import { motion } from 'framer-motion'
+import { theme } from '../theme'
+import PageTransition, { FadeInItem } from '../components/PageTransition'
+
+const isMobile = window.innerWidth < 768
+
 const projects = [
   {
     title: 'AI Trading Bot',
@@ -33,48 +39,59 @@ const projects = [
 
 export default function ProjectsPage() {
   return (
-    <div style={styles.container}>
-      <h2 style={styles.title}>Projects</h2>
-      <p style={styles.intro}>
-        A collection of software I've built — spanning AI-powered trading systems,
-        low-latency blockchain infrastructure, and web applications. Each project
-        solves real problems with production-grade architecture.
-      </p>
+    <PageTransition>
+      <div style={styles.container}>
+        <FadeInItem>
+          <h2 style={styles.title}>Projects</h2>
+          <p style={styles.intro}>
+            A collection of software I've built — spanning AI-powered trading systems,
+            low-latency blockchain infrastructure, and web applications. Each project
+            solves real problems with production-grade architecture.
+          </p>
+        </FadeInItem>
 
-      <div style={styles.grid}>
-        {projects.map((project, i) => (
-          <div key={i} style={styles.card}>
-            <h3 style={styles.projectTitle}>{project.title}</h3>
-            <p style={styles.tech}>{project.tech}</p>
-            <p style={styles.desc}>{project.description}</p>
-          </div>
-        ))}
+        <div style={styles.grid}>
+          {projects.map((project, i) => (
+            <FadeInItem key={i}>
+              <motion.div
+                style={styles.card}
+                whileHover={{
+                  backgroundColor: theme.colors.cardHoverBg,
+                  transition: { duration: 0.2 },
+                }}
+              >
+                <h3 style={styles.projectTitle}>{project.title}</h3>
+                <p style={styles.tech}>{project.tech}</p>
+                <p style={styles.desc}>{project.description}</p>
+              </motion.div>
+            </FadeInItem>
+          ))}
+        </div>
       </div>
-    </div>
+    </PageTransition>
   )
 }
 
-const isMobile = window.innerWidth < 768
-
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    padding: isMobile ? 16 : 24,
-    fontFamily: 'monospace',
-    color: '#000',
+    padding: isMobile ? 20 : 28,
+    fontFamily: theme.fonts.system,
+    color: theme.colors.textPrimary,
   },
   title: {
     fontSize: isMobile ? 20 : 22,
-    fontWeight: 'bold',
-    color: '#000080',
+    fontWeight: 700,
+    color: theme.colors.textPrimary,
     marginBottom: 12,
-    borderBottom: '2px solid #000080',
-    paddingBottom: 8,
+    letterSpacing: -0.3,
+    borderBottom: `1px solid rgba(255,255,255,0.1)`,
+    paddingBottom: 12,
   },
   intro: {
     fontSize: 13,
-    lineHeight: 1.6,
-    color: '#333',
-    marginBottom: 20,
+    lineHeight: 1.7,
+    color: theme.colors.textSecondary,
+    marginBottom: 24,
   },
   grid: {
     display: 'grid',
@@ -82,25 +99,27 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 12,
   },
   card: {
-    padding: isMobile ? 12 : 14,
-    backgroundColor: '#f0f0f0',
-    border: '2px outset #dfdfdf',
+    padding: isMobile ? 16 : 18,
+    backgroundColor: theme.colors.cardBg,
+    border: `1px solid ${theme.colors.cardBorder}`,
+    borderRadius: theme.radius.card,
+    cursor: 'default',
   },
   projectTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#000080',
+    fontWeight: 600,
+    color: theme.colors.accent,
     marginBottom: 6,
   },
   tech: {
     fontSize: 11,
-    color: '#888',
-    marginBottom: 8,
-    fontStyle: 'italic',
+    color: theme.colors.textTertiary,
+    marginBottom: 10,
+    fontFamily: theme.fonts.mono,
   },
   desc: {
     fontSize: 12,
-    lineHeight: 1.5,
-    color: '#333',
+    lineHeight: 1.6,
+    color: theme.colors.textSecondary,
   },
 }
