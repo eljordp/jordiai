@@ -360,7 +360,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     // Load MacBook
     loader.load('/models/macbook/scene.gltf', (gltf) => {
       const model = gltf.scene
-      model.scale.set(1.8, 1.8, 1.8)
+      model.scale.set(4.5, 4.5, 4.5)
       model.position.set(0, 170, -55)
       model.rotation.y = 0
 
@@ -394,8 +394,8 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     // Load AirPods (desk accessory)
     loader.load('/models/airpods/scene.gltf', (gltf) => {
       const model = gltf.scene
-      model.scale.set(30, 30, 30)
-      model.position.set(180, 172, 80)
+      model.scale.set(70, 70, 70)
+      model.position.set(160, 171, 80)
       model.rotation.y = -0.4
 
       model.traverse((child) => {
@@ -411,10 +411,9 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     // Load iPhone (desk accessory)
     loader.load('/models/iphone/scene.gltf', (gltf) => {
       const model = gltf.scene
-      model.scale.set(18, 18, 18)
-      model.position.set(-160, 172, 80)
-      model.rotation.x = -Math.PI / 2
-      model.rotation.z = 0.3
+      model.scale.set(40, 40, 40)
+      model.position.set(-160, 171, 80)
+      model.rotation.set(-Math.PI / 2, 0, 0.3)
 
       model.traverse((child) => {
         if (child instanceof THREE.Mesh) {
@@ -667,19 +666,6 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     scene.add(particles)
 
     // ── LEDs ──
-    const led1 = new THREE.Mesh(
-      new THREE.SphereGeometry(2, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0x00ff44 })
-    )
-    led1.position.set(130, 222, -43)
-    scene.add(led1)
-
-    const led2 = new THREE.Mesh(
-      new THREE.SphereGeometry(1.5, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0x0088ff })
-    )
-    led2.position.set(240, 180, 90)
-    scene.add(led2)
 
     // ── Raycaster ──
     const raycaster = new THREE.Raycaster()
@@ -763,9 +749,6 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
         const baseGlow = lampIsOn ? 25000 : 18000
         monitorGlowRef.current.intensity = baseGlow + Math.sin(time * 2) * 2000
       }
-
-      // LED blink
-      ;(led1.material as THREE.MeshBasicMaterial).opacity = 0.7 + Math.sin(time * 3) * 0.3
 
       camera.lookAt(lookAtTarget.current)
 
