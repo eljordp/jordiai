@@ -84,7 +84,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.6
+    renderer.toneMappingExposure = 1.0
     containerRef.current.appendChild(renderer.domElement)
 
     // ── Post-Processing ──
@@ -94,9 +94,9 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
       composer.addPass(new RenderPass(scene, camera))
       const bloomPass = new UnrealBloomPass(
         new THREE.Vector2(window.innerWidth, window.innerHeight),
-        0.25,  // strength
+        0.12,  // strength
         0.4,   // radius
-        0.88   // threshold
+        0.95   // threshold
       )
       composer.addPass(bloomPass)
       composer.addPass(new OutputPass())
@@ -113,14 +113,14 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     const blackPlastic = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.3 })
 
     // ── Lighting ──
-    const ambient = new THREE.AmbientLight(0xfff5ee, 1.4)
+    const ambient = new THREE.AmbientLight(0xfff5ee, 0.5)
     scene.add(ambient)
 
-    const hemi = new THREE.HemisphereLight(0xddeeff, 0x8B7355, 1.0)
+    const hemi = new THREE.HemisphereLight(0xddeeff, 0x8B7355, 0.4)
     scene.add(hemi)
 
     // Desk lamp (warm)
-    const deskLamp = new THREE.PointLight(0xffcc88, 180000, 1200, 2)
+    const deskLamp = new THREE.PointLight(0xffcc88, 60000, 1200, 2)
     deskLamp.position.set(-200, 420, 60)
     deskLamp.castShadow = true
     deskLamp.shadow.mapSize.set(1024, 1024)
@@ -128,31 +128,31 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     scene.add(deskLamp)
 
     // Monitor glow (cool white-blue)
-    const monitorGlow = new THREE.PointLight(0x88bbdd, 50000, 600, 2)
+    const monitorGlow = new THREE.PointLight(0x88bbdd, 25000, 600, 2)
     monitorGlow.position.set(0, 300, 20)
     scene.add(monitorGlow)
     monitorGlowRef.current = monitorGlow
 
     // Warm rim light (replaced purple)
-    const rimLight = new THREE.SpotLight(0xffaa66, 60000, 1500, Math.PI / 6, 0.5, 2)
+    const rimLight = new THREE.SpotLight(0xffaa66, 20000, 1500, Math.PI / 6, 0.5, 2)
     rimLight.position.set(400, 600, -300)
     rimLight.target.position.set(0, 200, 0)
     scene.add(rimLight)
     scene.add(rimLight.target)
 
     // Fill light
-    const fillLight = new THREE.PointLight(0x88aacc, 35000, 1200, 2)
+    const fillLight = new THREE.PointLight(0x88aacc, 12000, 1200, 2)
     fillLight.position.set(-300, 50, 300)
     scene.add(fillLight)
 
     // Ceiling light
-    const ceilingLight = new THREE.PointLight(0xffeedd, 280000, 1500, 2)
+    const ceilingLight = new THREE.PointLight(0xffeedd, 80000, 1500, 2)
     ceilingLight.position.set(0, 900, 100)
     ceilingLight.castShadow = true
     scene.add(ceilingLight)
 
     // Window daylight
-    const dayLight = new THREE.DirectionalLight(0xffffff, 1.8)
+    const dayLight = new THREE.DirectionalLight(0xffffff, 0.8)
     dayLight.position.set(-500, 800, 200)
     dayLight.castShadow = true
     scene.add(dayLight)
@@ -164,13 +164,13 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     const setLightMode = (on: boolean) => {
       lampIsOn = on
       lampOnRef.current = on
-      ambient.intensity = on ? 1.4 : 0.12
-      hemi.intensity = on ? 1.0 : 0.15
-      deskLamp.intensity = on ? 180000 : 70000
-      ceilingLight.intensity = on ? 280000 : 0
-      dayLight.intensity = on ? 1.8 : 0.0
-      fillLight.intensity = on ? 35000 : 8000
-      rimLight.intensity = on ? 60000 : 30000
+      ambient.intensity = on ? 0.5 : 0.08
+      hemi.intensity = on ? 0.4 : 0.1
+      deskLamp.intensity = on ? 60000 : 30000
+      ceilingLight.intensity = on ? 80000 : 0
+      dayLight.intensity = on ? 0.8 : 0.0
+      fillLight.intensity = on ? 12000 : 4000
+      rimLight.intensity = on ? 20000 : 10000
       scene.background = new THREE.Color(on ? 0x8899aa : 0x050508)
     }
 
@@ -760,7 +760,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
 
       // Monitor glow pulse
       if (monitorGlowRef.current) {
-        const baseGlow = lampIsOn ? 50000 : 35000
+        const baseGlow = lampIsOn ? 25000 : 18000
         monitorGlowRef.current.intensity = baseGlow + Math.sin(time * 2) * 2000
       }
 
