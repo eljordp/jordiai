@@ -412,8 +412,8 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     loader.load('/models/iphone/scene.gltf', (gltf) => {
       const model = gltf.scene
       model.scale.set(40, 40, 40)
-      model.position.set(-160, 171, 80)
-      model.rotation.set(0, 0.3, 0)
+      model.position.set(-160, 172, 80)
+      model.rotation.set(0, 0.3, -Math.PI / 2)
 
       model.traverse((child) => {
         if (child instanceof THREE.Mesh) {
