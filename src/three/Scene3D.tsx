@@ -545,7 +545,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
 
     // ── Coffee Mug ──
     const mugGroup = new THREE.Group()
-    mugGroup.position.set(-140, 170, 70)
+    mugGroup.position.set(160, 170, 100)
     scene.add(mugGroup)
 
     const mugBody = new THREE.Mesh(
@@ -839,11 +839,11 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
       // Mouse parallax — camera follows cursor
       const mode = cameraModeRef.current
       if (mode !== 'monitor') {
-        const parallaxStrength = mode === 'idle' ? 30 : 20
+        const parallaxStrength = mode === 'idle' ? 50 : 35
         const targetX = KEYFRAMES[mode].position.x + mousePos.current.x * parallaxStrength
-        const targetY = KEYFRAMES[mode].position.y - mousePos.current.y * parallaxStrength * 0.5
-        camera.position.x += (targetX - camera.position.x) * 0.08
-        camera.position.y += (targetY - camera.position.y) * 0.08
+        const targetY = KEYFRAMES[mode].position.y - mousePos.current.y * parallaxStrength * 0.4
+        camera.position.x += (targetX - camera.position.x) * 0.12
+        camera.position.y += (targetY - camera.position.y) * 0.12
       }
 
       // Gentle particle float
