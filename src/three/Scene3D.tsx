@@ -221,7 +221,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
 
     // ── GLTF Model Loader ──
     const loader = new GLTFLoader()
-    let macbookScreenMesh: THREE.Mesh | null = null
+    let macbookModel: THREE.Group | null = null
 
     // Draw macOS-style preview on a canvas for the MacBook screen
     const previewCanvas = document.createElement('canvas')
@@ -372,7 +372,6 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
           // Find the screen mesh (material with full emissive = sfCQkHOWyrsLmor)
           const mat = child.material as THREE.MeshStandardMaterial
           if (mat && mat.emissiveIntensity > 0.5) {
-            macbookScreenMesh = child
             screenRef.current = child
 
             // Apply OS preview texture to the screen
@@ -388,6 +387,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
         }
       })
 
+      macbookModel = model
       scene.add(model)
     })
 
@@ -395,8 +395,8 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     loader.load('/models/airpods/scene.gltf', (gltf) => {
       const model = gltf.scene
       model.scale.set(300, 300, 300)
-      model.position.set(160, 171, 80)
-      model.rotation.y = -0.4
+      model.position.set(160, 175, 80)
+      model.rotation.set(0, -0.4, -Math.PI / 2)
 
       model.traverse((child) => {
         if (child instanceof THREE.Mesh) {
@@ -685,10 +685,10 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
         return
       }
 
-      // MacBook screen click
-      if (macbookScreenMesh) {
-        const screenHits = raycaster.intersectObject(macbookScreenMesh)
-        if (screenHits.length > 0) {
+      // MacBook click (anywhere on the laptop)
+      if (macbookModel) {
+        const macbookHits = raycaster.intersectObject(macbookModel, true)
+        if (macbookHits.length > 0) {
           onEnterMonitor()
           return
         }
