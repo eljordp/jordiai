@@ -396,7 +396,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
       const model = gltf.scene
       model.scale.set(300, 300, 300)
       model.position.set(160, 175, 80)
-      model.rotation.set(0, -0.4, -Math.PI / 2)
+      model.rotation.set(Math.PI, -0.4, -Math.PI / 2)
 
       model.traverse((child) => {
         if (child instanceof THREE.Mesh) {
@@ -413,7 +413,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
       const model = gltf.scene
       model.scale.set(40, 40, 40)
       model.position.set(-160, 172, 80)
-      model.rotation.set(0, 0.3, -Math.PI / 2)
+      model.rotation.set(Math.PI, 0.3, -Math.PI / 2)
 
       model.traverse((child) => {
         if (child instanceof THREE.Mesh) {

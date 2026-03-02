@@ -1,8 +1,11 @@
 import { theme } from '../theme'
+import MenuBar from './MenuBar'
 
 export default function Desktop() {
   return (
-    <div style={styles.desktop} />
+    <div style={styles.desktop}>
+      <MenuBar />
+    </div>
   )
 }
 
