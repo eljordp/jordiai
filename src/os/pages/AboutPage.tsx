@@ -100,14 +100,16 @@ export default function AboutPage() {
   )
 }
 
+const isMobile = window.innerWidth < 768
+
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    padding: 28,
+    padding: isMobile ? 16 : 28,
     fontFamily: theme.fonts.system,
     color: theme.colors.textPrimary,
   },
   title: {
-    fontSize: 22,
+    fontSize: isMobile ? 18 : 22,
     fontWeight: 700,
     color: theme.colors.textPrimary,
     marginBottom: 24,

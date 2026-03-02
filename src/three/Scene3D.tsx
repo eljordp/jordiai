@@ -705,6 +705,26 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     }
     window.addEventListener('mousemove', handleMouseMove)
 
+    // ── Touch drag parallax ──
+    let touchStart = { x: 0, y: 0 }
+    const handleTouchStart = (e: TouchEvent) => {
+      const t = e.touches[0]
+      touchStart.x = t.clientX
+      touchStart.y = t.clientY
+    }
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+      const t = e.touches[0]
+      const dx = (t.clientX - touchStart.x) / window.innerWidth
+      const dy = (t.clientY - touchStart.y) / window.innerHeight
+      mousePos.current.x = Math.max(-1, Math.min(1, mousePos.current.x + dx * 3))
+      mousePos.current.y = Math.max(-1, Math.min(1, mousePos.current.y + dy * 3))
+      touchStart.x = t.clientX
+      touchStart.y = t.clientY
+    }
+    renderer.domElement.addEventListener('touchstart', handleTouchStart, { passive: true })
+    renderer.domElement.addEventListener('touchmove', handleTouchMove, { passive: false })
+
     // ── Resize ──
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight
@@ -763,6 +783,8 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
     return () => {
       cancelAnimationFrame(frameRef.current)
       renderer.domElement.removeEventListener('click', handleClick)
+      renderer.domElement.removeEventListener('touchstart', handleTouchStart)
+      renderer.domElement.removeEventListener('touchmove', handleTouchMove)
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('resize', handleResize)
       if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
@@ -782,6 +804,7 @@ export default function Scene3D({ cameraMode, onResourcesLoaded, onClickOutside,
         width: '100%',
         height: '100%',
         zIndex: 0,
+        touchAction: 'none',
       }}
     />
   )

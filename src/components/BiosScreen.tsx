@@ -123,6 +123,8 @@ export default function BiosScreen({ onStart }: Props) {
   )
 }
 
+const isMobile = window.innerWidth < 768
+
 const styles: Record<string, React.CSSProperties> = {
   container: {
     position: 'fixed',
@@ -163,7 +165,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: 48,
+    gap: isMobile ? 32 : 48,
     zIndex: 3,
     width: '100%',
     maxWidth: 420,
@@ -174,9 +176,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   name: {
     color: '#fff',
-    fontSize: 48,
+    fontSize: isMobile ? 32 : 48,
     fontWeight: 'bold',
-    letterSpacing: 16,
+    letterSpacing: isMobile ? 8 : 16,
     marginBottom: 16,
     fontFamily: 'monospace',
   },

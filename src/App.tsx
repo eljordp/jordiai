@@ -143,13 +143,15 @@ export default function App() {
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.4 }}
           >
-            <p style={styles.hintText}>Click the screen to enter</p>
+            <p style={styles.hintText}>{isMobile ? 'Tap the screen to enter' : 'Click the screen to enter'}</p>
           </motion.div>
         )}
       </AnimatePresence>
     </>
   )
 }
+
+const isMobile = window.innerWidth < 768
 
 const styles: Record<string, React.CSSProperties> = {
   overlay: {
@@ -201,13 +203,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   exitButton: {
     position: 'absolute',
-    top: 12,
-    left: 12,
+    top: isMobile ? 8 : 12,
+    left: isMobile ? 8 : 12,
     zIndex: 10001,
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-    padding: '6px 14px',
+    padding: isMobile ? '8px 16px' : '6px 14px',
     backgroundColor: 'rgba(0,0,0,0.6)',
     border: '1px solid rgba(255,255,255,0.2)',
     borderRadius: 8,
@@ -229,14 +231,14 @@ const styles: Record<string, React.CSSProperties> = {
   },
   hint: {
     position: 'fixed',
-    bottom: 60,
+    bottom: isMobile ? 40 : 60,
     left: '50%',
     transform: 'translateX(-50%)',
     zIndex: 4,
   },
   hintText: {
     color: 'rgba(255,255,255,0.5)',
-    fontSize: 14,
+    fontSize: isMobile ? 13 : 14,
     fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
     textShadow: '0 0 10px rgba(68,136,255,0.3)',
     letterSpacing: 1,

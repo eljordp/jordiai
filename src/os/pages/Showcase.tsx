@@ -74,9 +74,11 @@ export default function Showcase({ onNavigate }: Props) {
   )
 }
 
+const isMobile = window.innerWidth < 768
+
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    padding: 28,
+    padding: isMobile ? 16 : 28,
     fontFamily: theme.fonts.system,
     color: theme.colors.textPrimary,
   },
@@ -84,7 +86,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 24,
   },
   name: {
-    fontSize: 38,
+    fontSize: isMobile ? 28 : 38,
     color: theme.colors.textPrimary,
     fontWeight: 700,
     lineHeight: 1,
@@ -116,13 +118,15 @@ const styles: Record<string, React.CSSProperties> = {
   },
   categories: {
     display: 'flex',
-    gap: 12,
+    flexWrap: 'wrap' as const,
+    gap: 10,
     marginTop: 16,
     marginBottom: 24,
   },
   categoryCard: {
-    flex: 1,
-    padding: 18,
+    flex: isMobile ? '1 1 calc(50% - 10px)' : 1,
+    minWidth: isMobile ? 0 : undefined,
+    padding: isMobile ? 14 : 18,
     backgroundColor: theme.colors.cardBg,
     border: `1px solid ${theme.colors.cardBorder}`,
     borderRadius: theme.radius.card,
