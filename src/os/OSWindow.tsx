@@ -7,6 +7,7 @@ import Showcase from './pages/Showcase'
 import AboutPage from './pages/AboutPage'
 import ProjectsPage from './pages/ProjectsPage'
 import ContactPage from './pages/ContactPage'
+import CoursesPage from './pages/CoursesPage'
 
 export interface WindowState {
   id: string
@@ -20,7 +21,7 @@ export interface WindowState {
   zIndex: number
 }
 
-export type AppKey = 'showcase' | 'about' | 'projects' | 'contact'
+export type AppKey = 'showcase' | 'about' | 'projects' | 'courses' | 'contact'
 
 export default function OSWindow() {
   const [windows, setWindows] = useState<WindowState[]>([])
@@ -54,6 +55,12 @@ export default function OSWindow() {
         title: 'Projects',
         component: <ProjectsPage />,
         width: 750,
+        height: 520,
+      },
+      courses: {
+        title: 'Courses',
+        component: <CoursesPage />,
+        width: 700,
         height: 520,
       },
       contact: {

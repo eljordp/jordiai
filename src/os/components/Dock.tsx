@@ -15,6 +15,7 @@ const dockItems: { key: AppKey; label: string; symbol: string; color: string }[]
   { key: 'showcase', label: 'Showcase', symbol: 'S', color: '#0a84ff' },
   { key: 'about', label: 'About', symbol: 'A', color: '#30d158' },
   { key: 'projects', label: 'Projects', symbol: 'P', color: '#bf5af2' },
+  { key: 'courses', label: 'Courses', symbol: 'K', color: '#ff453a' },
   { key: 'contact', label: 'Contact', symbol: 'C', color: '#ff9f0a' },
 ]
 

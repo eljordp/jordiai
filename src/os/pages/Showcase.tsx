@@ -41,6 +41,7 @@ export default function Showcase({ onNavigate }: Props) {
           {[
             { key: 'projects' as AppKey, title: 'Websites', desc: 'Web design & development' },
             { key: 'projects' as AppKey, title: 'Software', desc: 'Custom applications & tools' },
+            { key: 'courses' as AppKey, title: 'Courses', desc: 'Growth & operator playbooks' },
             { key: 'contact' as AppKey, title: 'Contact', desc: 'Get in touch' },
           ].map((cat) => (
             <FadeInItem key={cat.title}>
@@ -65,6 +66,8 @@ export default function Showcase({ onNavigate }: Props) {
             <span style={styles.link} onClick={() => onNavigate('about')}>About</span>
             <span style={styles.linkDivider}>|</span>
             <span style={styles.link} onClick={() => onNavigate('projects')}>Projects</span>
+            <span style={styles.linkDivider}>|</span>
+            <span style={styles.link} onClick={() => onNavigate('courses')}>Courses</span>
             <span style={styles.linkDivider}>|</span>
             <span style={styles.link} onClick={() => onNavigate('contact')}>Contact</span>
           </div>
